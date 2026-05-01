@@ -5,8 +5,8 @@ import Landing from './pages/Landing';
 import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
 import AuditorDashboard from './pages/AuditorDashboard';
+import JudgesDashboard from './pages/JudgesDashboard';
 import PublicDashboard from './pages/PublicDashboard';
-import FraudEdgeCases from './pages/FraudEdgeCases';
 import FlaggedTransactions from './pages/FlaggedTransactions';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Web3Provider } from './context/Web3Context';
@@ -31,10 +31,10 @@ function App() {
                 <Route path="/" element={<Landing />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/public" element={<PublicDashboard />} />
+                <Route path="/flagged" element={<FlaggedTransactions />} />
                 <Route path="/admin" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
                 <Route path="/auditor" element={<ProtectedRoute role="auditor"><AuditorDashboard /></ProtectedRoute>} />
-                <Route path="/prototypes" element={<FraudEdgeCases />} />
-                <Route path="/flagged" element={<FlaggedTransactions />} />
+                <Route path="/judges" element={<JudgesDashboard />} />
               </Routes>
             </main>
           </div>
