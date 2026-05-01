@@ -37,12 +37,12 @@ function App() {
                 <Route path="/admin" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
                 <Route path="/auditor" element={<ProtectedRoute role="auditor"><AuditorDashboard /></ProtectedRoute>} />
                 <Route path="/judges" element={<JudgesDashboard />} />
-              </Routes >
-            </main >
-          </div >
-        </BrowserRouter >
-      </AuthProvider >
-    </Web3Provider >
+              </Routes>
+            </main>
+          </div>
+        </BrowserRouter>
+      </AuthProvider>
+    </Web3Provider>
   );
 }
 

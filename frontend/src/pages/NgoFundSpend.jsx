@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import {
   ShieldCheck, ShieldAlert, AlertTriangle, CheckCircle2,
   Search, Filter, Clock, ArrowUpRight, TrendingUp, Users,
@@ -67,26 +67,27 @@ const LegitTab = () => {
       </div>
 
       {/* Search + Filter */}
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
+      <div className="flex flex-col gap-4 mb-6">
         <div className="flex-grow relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
           <input
             type="text"
-            className="w-full pl-11 pr-4 py-3 border border-zinc-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition"
+            className="w-full pl-11 pr-4 py-3 border border-zinc-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 transition"
             placeholder="Search by project, NGO, vendor, or category…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap items-center">
+          <span className="text-xs font-bold text-zinc-500 uppercase">Category:</span>
           {categories.map((c) => (
             <button
               key={c}
               onClick={() => setCatFilter(c)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border transition ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider border transition ${
                 catFilter === c
-                  ? "bg-indigo-600 text-white border-indigo-600"
-                  : "bg-white text-zinc-600 border-zinc-200 hover:border-indigo-300"
+                  ? "bg-emerald-600 text-white border-emerald-600"
+                  : "bg-white text-zinc-600 border-zinc-200 hover:border-emerald-300"
               }`}
             >
               {c}
@@ -152,7 +153,9 @@ const LegitTab = () => {
                       </span>
                     )}
                   </td>
-                  <td className="px-5 py-4 font-mono text-[10px] text-zinc-400">{tx.blockHash}</td>
+                  <td className="px-5 py-4 font-mono text-[10px] text-zinc-400" title={tx.blockHash}>
+                    {tx.blockHash.slice(0, 10)}…{tx.blockHash.slice(-8)}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -183,6 +186,9 @@ const FlaggedTab = () => {
   const [sortField, setSortField]  = useState("overspendRatio");
   const [sortDir, setSortDir]      = useState("desc");
   const [sevFilter, setSevFilter]  = useState("All");
+  const [catFilter, setCatFilter]  = useState("All");
+  
+  const categories = ["All", ...new Set(ngoTransactions.filter((t) => t.flagged).map((t) => t.category))];
 
   const flaggedTxns = useMemo(() => {
     let txns = ngoTransactions.filter((tx) => tx.flagged);
@@ -199,13 +205,16 @@ const FlaggedTab = () => {
     if (sevFilter !== "All") {
       txns = txns.filter((tx) => getSeverity(tx.overspendRatio).label === sevFilter);
     }
+    if (catFilter !== "All") {
+      txns = txns.filter((tx) => tx.category === catFilter);
+    }
     txns.sort((a, b) => {
       const av = a[sortField], bv = b[sortField];
       if (typeof av === "number") return sortDir === "asc" ? av - bv : bv - av;
       return sortDir === "asc" ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
     });
     return txns;
-  }, [search, sortField, sortDir, sevFilter]);
+  }, [search, sortField, sortDir, sevFilter, catFilter]);
 
   const totalFlagged       = flaggedTxns.length;
   const totalFlaggedAmount = flaggedTxns.reduce((s, tx) => s + tx.amount, 0);
@@ -249,30 +258,49 @@ const FlaggedTab = () => {
         </div>
       </div>
 
-      {/* Search + Severity Filter */}
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
-        <div className="flex-grow relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
-          <input
-            type="text"
-            className="w-full pl-11 pr-4 py-3 border border-zinc-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition"
-            placeholder="Search by project, NGO, vendor, or category…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+      {/* Search + Filters */}
+      <div className="flex flex-col gap-4 mb-6">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-grow relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
+            <input
+              type="text"
+              className="w-full pl-11 pr-4 py-3 border border-zinc-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition"
+              placeholder="Search by project, NGO, vendor, or category…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <div className="flex gap-2 flex-wrap items-center">
+            <span className="text-xs font-bold text-zinc-500 uppercase">Severity:</span>
+            {["All","CRITICAL","HIGH","MEDIUM","LOW"].map((s) => (
+              <button
+                key={s}
+                onClick={() => setSevFilter(s)}
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border transition ${
+                  sevFilter === s
+                    ? "bg-rose-600 text-white border-rose-600"
+                    : "bg-white text-zinc-600 border-zinc-200 hover:border-rose-300"
+                }`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="flex gap-2">
-          {["All","CRITICAL","HIGH","MEDIUM","LOW"].map((s) => (
+        <div className="flex gap-2 flex-wrap items-center">
+          <span className="text-xs font-bold text-zinc-500 uppercase">Category:</span>
+          {categories.map((c) => (
             <button
-              key={s}
-              onClick={() => setSevFilter(s)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border transition ${
-                sevFilter === s
+              key={c}
+              onClick={() => setCatFilter(c)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider border transition ${
+                catFilter === c
                   ? "bg-rose-600 text-white border-rose-600"
                   : "bg-white text-zinc-600 border-zinc-200 hover:border-rose-300"
               }`}
             >
-              {s}
+              {c}
             </button>
           ))}
         </div>
@@ -419,7 +447,7 @@ const NgoFundSpend = () => {
   const flaggedCount = ngoTransactions.filter((t) =>  t.flagged).length;
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] p-6 md:p-10 text-slate-900">
+    <div className="bg-[#f8fafc] p-6 md:p-10 text-slate-900 w-full overflow-x-hidden">
       <div className="max-w-7xl mx-auto">
 
         {/* ── Page Header ── */}
