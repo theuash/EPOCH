@@ -2,7 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Globe, LogOut } from 'lucide-react';
+import { Globe, LogOut, ShieldAlert } from 'lucide-react';
 
 const Navbar = () => {
   const { t, i18n } = useTranslation();
@@ -27,6 +27,10 @@ const Navbar = () => {
           <div className="hidden md:flex items-center gap-8 text-xs font-bold text-zinc-500 uppercase tracking-widest">
             <Link to="/" className="hover:text-black transition-colors">{t('nav.home')}</Link>
             <Link to="/public" className="hover:text-black transition-colors">{t('nav.public')}</Link>
+            <Link to="/flagged" className="hover:text-rose-600 transition-colors flex items-center gap-1.5">
+              <ShieldAlert size={12} className="text-rose-500" />
+              {t('nav.flagged')}
+            </Link>
             {user?.role === 'admin' && <Link to="/admin" className="hover:text-black transition-colors">{t('nav.admin')}</Link>}
             {user?.role === 'auditor' && <Link to="/auditor" className="hover:text-black transition-colors">{t('nav.auditor')}</Link>}
           </div>

@@ -25,6 +25,7 @@ contract FlagEngine is Ownable {
     address public fundTransferContract;
 
     event FlagRaised(uint256 indexed flagId, uint256 indexed txId, string ruleTriggered);
+    event Flagged(uint256 indexed txId, string reason, uint256 spend, uint256 budgetLimit);
 
     constructor() Ownable(msg.sender) {}
 
@@ -68,6 +69,12 @@ contract FlagEngine is Ownable {
         // Update state after check
         hasReceivedBefore[receiver] = true;
         monthlyTotal[monthId] += amount;
+    }
+
+    // Case 1: Overspend Check - spend exceeds budget * 3
+    function checkOverspend(uint256 txId, uint256 spend, uint256 budget) external {
+        require(spend <= budget * 3, "Flag: Overspend");
+        emit Flagged(txId, "overspend_breach", spend, budget * 3);
     }
 
     function _raiseFlag(uint256 txId, string memory rule, uint256 timestamp) internal {
