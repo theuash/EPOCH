@@ -65,6 +65,7 @@ export default {
       admin: "Admin",
       auditor: "Auditor",
       public: "Public Dashboard",
+      flagged: "Flagged",
       login: "Login"
     },
     status: {
@@ -95,6 +96,10 @@ export default {
       resolve: "Resolve",
       connect_wallet: "Connect Wallet",
       email_login: "Email Login"
+    },
+    flagged: {
+      title: "Flagged Transactions",
+      subtitle: "Transactions auto-flagged by smart contract detection rules — overspend exceeding 3× avg monthly budget without milestone approval, or vendor repeat rate above 80%."
     }
   }
 };
