@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #111111;    /* Deep Black/Grey */
+  --color-secondary: #f4f4f5;  /* Light Zinc */
+  --color-accent: #0055ff;     /* Corporate Blue */
+  --color-danger: #e11d48;     /* Stark Red */
+  --color-success: #059669;    /* Deep Emerald */
+  --color-surface: #ffffff;
+  --color-border: #e4e4e7;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap');
+
+:root {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body {
+  background-color: #fafafa;
+  color: #111111;
+  min-height: 100vh;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Stark, flat, professional cards */
+.card-premium {
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+/* Solid, clean buttons */
+.btn-premium {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-premium-primary {
+  background: #111111;
+  color: #ffffff;
+}
+
+.btn-premium-primary:hover {
+  background: #27272a;
+}
+
+.btn-premium-outline {
+  background: #ffffff;
+  color: #111111;
+  border-color: #e4e4e7;
+}
+
+.btn-premium-outline:hover {
+  background: #f4f4f5;
+  border-color: #d4d4d8;
+}
+
+/* Input styles */
+.input-premium {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 4px;
+  outline: none;
+  font-size: 0.875rem;
+}
+
+.input-premium:focus {
+  border-color: #0055ff;
+}
+
+/* Parallax container utilities */
+.parallax-wrapper {
+  perspective: 1px;
+  height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  transform-style: preserve-3d;
+}
+
+.parallax-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.parallax-layer-base {
+  transform: translateZ(0);
+}
+
+.parallax-layer-back {
+  transform: translateZ(-1px) scale(2);
+}
