@@ -17,7 +17,11 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/transactions', require('./routes/transactions'));
 app.use('/api/flags', require('./routes/flags'));
 app.use('/api/upload', require('./routes/upload'));
+<<<<<<< HEAD
 app.use('/api/detection', require('./routes/detection'));
+=======
+app.use('/api/ngo-transactions', require('./routes/ngoTransactions'));
+>>>>>>> 08800f72c918522264955fedbb07598c3a4a183e
 
 // Chain Status Endpoint
 const { auditTrail } = require('./services/blockchainService');
