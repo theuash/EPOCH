@@ -17,6 +17,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/transactions', require('./routes/transactions'));
 app.use('/api/flags', require('./routes/flags'));
 app.use('/api/upload', require('./routes/upload'));
+app.use('/api/detection', require('./routes/detection'));
 
 // Chain Status Endpoint
 const { auditTrail } = require('./services/blockchainService');

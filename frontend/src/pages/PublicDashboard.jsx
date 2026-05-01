@@ -14,6 +14,9 @@ import {
 } from 'lucide-react';
 import ngoTransactions from '../data/ngo_transactions.json';
 import disasterTransactions from '../data/disaster_relief_transactions.json';
+import mlTransactions from '../data/money_laundering_transactions.json';
+import claimTransactions from '../data/duplicate_claims_transactions.json';
+import shellTransactions from '../data/shell_entity_transactions.json';
 
 const PublicDashboard = () => {
   const { t } = useTranslation();
@@ -33,10 +36,10 @@ const PublicDashboard = () => {
       } catch (err) { 
         console.error(err);
         // Fallback: use local synthetic data (only legit, non-flagged transactions from all datasets)
-        const allDatasets = [...ngoTransactions, ...disasterTransactions];
+        const allDatasets = [...ngoTransactions, ...disasterTransactions, ...mlTransactions, ...claimTransactions, ...shellTransactions];
         const legitTxns = allDatasets.filter(tx => !tx.flagged).map(tx => ({
           ...tx,
-          receiverName: tx.vendorName,
+          receiverName: tx.vendorName || tx.donorName || tx.claimantName || 'Unknown',
           status: 'committed',
         }));
         setTransactions(legitTxns);
