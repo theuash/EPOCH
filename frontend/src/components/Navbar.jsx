@@ -26,7 +26,7 @@ const Navbar = () => {
         <div className="flex items-center gap-8">
           <div className="hidden md:flex items-center gap-8 text-xs font-bold text-zinc-500 uppercase tracking-widest">
             <Link to="/" className="hover:text-black transition-colors">{t('nav.home')}</Link>
-            <Link to="/public" className="hover:text-black transition-colors">{t('nav.public')}</Link>
+            <Link to="/public" className="hover:text-indigo-600 transition-colors">Public View</Link>
             <Link to="/ngo-spend" className="hover:text-indigo-600 transition-colors flex items-center gap-1.5">
               NGO Spend
             </Link>

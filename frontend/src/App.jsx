@@ -7,6 +7,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import AuditorDashboard from './pages/AuditorDashboard';
 import JudgesDashboard from './pages/JudgesDashboard';
 import PublicDashboard from './pages/PublicDashboard';
+import PublicView from './pages/PublicView';
 import FlaggedTransactions from './pages/FlaggedTransactions';
 import NgoFundSpend from './pages/NgoFundSpend';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -31,7 +32,8 @@ function App() {
               <Routes>
                 <Route path="/" element={<Landing />} />
                 <Route path="/login" element={<Login />} />
-                <Route path="/public" element={<PublicDashboard />} />
+                <Route path="/public" element={<PublicView />} />
+                <Route path="/public-dashboard" element={<PublicDashboard />} />
                 <Route path="/ngo-spend" element={<NgoFundSpend />} />
                 <Route path="/flagged" element={<FlaggedTransactions />} />
                 <Route path="/admin" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
