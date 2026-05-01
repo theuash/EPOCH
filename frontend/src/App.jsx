@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
 import AuditorDashboard from './pages/AuditorDashboard';
 import PublicDashboard from './pages/PublicDashboard';
+import FraudEdgeCases from './pages/FraudEdgeCases';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Web3Provider } from './context/Web3Context';
 import './i18n';
@@ -31,6 +32,7 @@ function App() {
                 <Route path="/public" element={<PublicDashboard />} />
                 <Route path="/admin" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
                 <Route path="/auditor" element={<ProtectedRoute role="auditor"><AuditorDashboard /></ProtectedRoute>} />
+                <Route path="/prototypes" element={<FraudEdgeCases />} />
               </Routes>
             </main>
           </div>

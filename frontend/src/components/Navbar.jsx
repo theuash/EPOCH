@@ -27,6 +27,7 @@ const Navbar = () => {
           <div className="hidden md:flex items-center gap-8 text-xs font-bold text-zinc-500 uppercase tracking-widest">
             <Link to="/" className="hover:text-black transition-colors">{t('nav.home')}</Link>
             <Link to="/public" className="hover:text-black transition-colors">{t('nav.public')}</Link>
+            <Link to="/prototypes" className="hover:text-black transition-colors">Prototypes</Link>
             {user?.role === 'admin' && <Link to="/admin" className="hover:text-black transition-colors">{t('nav.admin')}</Link>}
             {user?.role === 'auditor' && <Link to="/auditor" className="hover:text-black transition-colors">{t('nav.auditor')}</Link>}
           </div>

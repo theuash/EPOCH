@@ -1,8 +1,7 @@
 # ChainLedger: NGO Fund Transparency System
 
 A full-stack blockchain solution to track public fund flow end-to-end on a tamper-proof ledger with multi-role access and automatic flagging of suspicious transactions.
-
-Abhishek 
+ 
 
 ## Tech Stack
 - **Blockchain**: Solidity, Hardhat, Ethers.js
