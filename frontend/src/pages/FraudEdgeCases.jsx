@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertOctagon, Activity, ShieldAlert, GitMerge, FileWarning, Search, XCircle, CheckCircle, RefreshCcw, DollarSign, AlertTriangle } from 'lucide-react';
+import { AlertOctagon, Activity, ShieldAlert, GitMerge, FileWarning, Search, XCircle, CheckCircle, RefreshCcw, IndianRupee, AlertTriangle } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 
 // --- Shared Components ---
@@ -70,10 +70,10 @@ const CasePhantomProject = () => {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center mb-4">
-        <div className="text-sm text-zinc-500">Avg Monthly Budget: <span className="font-bold text-zinc-800">$4,000</span></div>
+        <div className="text-sm text-zinc-500">Avg Monthly Budget: <span className="font-bold text-zinc-800">₹4,00,000</span></div>
         <div className="space-x-2">
           <button onClick={reset} className="btn-premium btn-premium-outline py-1.5 px-3 text-xs"><RefreshCcw size={14}/></button>
-          <button onClick={simulateFraud} disabled={flagged} className="btn-premium bg-red-600 hover:bg-red-700 text-white py-1.5 px-3 text-xs">Simulate $15k Outflow</button>
+          <button onClick={simulateFraud} disabled={flagged} className="btn-premium bg-red-600 hover:bg-red-700 text-white py-1.5 px-3 text-xs">Simulate ₹15L Outflow</button>
         </div>
       </div>
       
@@ -90,7 +90,7 @@ const CasePhantomProject = () => {
                   <div className="font-medium">{tx.to}</div>
                   <div className="text-xs opacity-70">{tx.time}</div>
                 </div>
-                <div className="font-bold">${tx.amount.toLocaleString()}</div>
+                <div className="font-bold">₹{tx.amount.toLocaleString('en-IN')}</div>
               </motion.div>
             ))}
           </AnimatePresence>
@@ -127,11 +127,11 @@ const CaseReliefDiversion = () => {
       <div className="flex gap-4">
         <div className="flex-1 bg-zinc-50 border border-zinc-200 rounded p-4 text-center">
           <div className="text-xs text-zinc-500 uppercase tracking-wide mb-1">Target Aid (Food)</div>
-          <div className="text-2xl font-bold text-zinc-800">${diversionActive ? '200' : '2,000'}</div>
+          <div className="text-2xl font-bold text-zinc-800">₹{diversionActive ? '20,000' : '2,00,000'}</div>
         </div>
         <div className={`flex-1 rounded p-4 text-center transition-colors border ${diversionActive ? 'bg-red-50 border-red-200' : 'bg-zinc-50 border-zinc-200'}`}>
           <div className="text-xs text-zinc-500 uppercase tracking-wide mb-1">Admin / Travel</div>
-          <div className={`text-2xl font-bold ${diversionActive ? 'text-red-600' : 'text-zinc-800'}`}>${diversionActive ? '1,800' : '200'}</div>
+          <div className={`text-2xl font-bold ${diversionActive ? 'text-red-600' : 'text-zinc-800'}`}>₹{diversionActive ? '1,80,000' : '20,000'}</div>
         </div>
       </div>
 
@@ -176,7 +176,7 @@ const CaseMoneyLaundering = () => {
        <div className="flex justify-between items-center mb-2">
         <div className="text-sm text-zinc-500">Donor Profile: <span className="font-mono text-zinc-800">0x7F...2B9</span> (No KYC)</div>
         <button onClick={() => setShowOutlier(!showOutlier)} className="btn-premium btn-premium-outline py-1.5 px-3 text-xs">
-          {showOutlier ? 'Hide Outlier' : 'Inject $6k Txn'}
+          {showOutlier ? 'Hide Outlier' : 'Inject ₹6L Txn'}
         </button>
       </div>
 
@@ -186,7 +186,7 @@ const CaseMoneyLaundering = () => {
           {grid.flat().map((cell, i) => (
              <div 
               key={i} 
-              title={`$${cell.val}`}
+              title={`₹${cell.val}`}
               className={`h-8 rounded transition-all duration-500 ${
                 cell.isOutlier 
                   ? 'bg-red-500 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]' 
@@ -204,7 +204,7 @@ const CaseMoneyLaundering = () => {
             <div className="text-sm text-red-900">
               <strong>Smart Contract Revert:</strong><br/>
               <span className="font-mono text-xs text-red-700 bg-red-100 px-1 py-0.5 rounded">require(amount &lt;= 1000 || kycVerified, "Flag: Suspicious Donor")</span>
-              <div className="mt-1 text-xs opacity-80">Jump &gt;5x average ($120). Unverified wallet hit $6,000 threshold.</div>
+              <div className="mt-1 text-xs opacity-80">Jump &gt;5x average (₹12,000). Unverified wallet hit ₹6,00,000 threshold.</div>
             </div>
           </motion.div>
         )}
@@ -316,7 +316,7 @@ const CaseShellEntity = () => {
 
         {/* Nodes */}
         <div className="absolute left-[5%] top-1/2 -translate-y-1/2 flex flex-col items-center">
-          <div className="w-10 h-10 rounded-full bg-zinc-800 border-2 border-emerald-400 flex items-center justify-center shadow-[0_0_15px_rgba(52,211,153,0.3)]"><DollarSign size={16} className="text-emerald-400"/></div>
+          <div className="w-10 h-10 rounded-full bg-zinc-800 border-2 border-emerald-400 flex items-center justify-center shadow-[0_0_15px_rgba(52,211,153,0.3)]"><IndianRupee size={16} className="text-emerald-400"/></div>
           <span className="text-[10px] text-zinc-400 mt-1">Donors</span>
         </div>
 
@@ -396,7 +396,7 @@ const CaseMicroDonations = () => {
         <div className="flex-1 space-y-2">
           <div className="flex justify-between text-xs">
             <span className="text-zinc-500">Hourly Vol:</span>
-            <span className="font-bold">${burst ? '3,500' : '450'}</span>
+            <span className="font-bold">₹{burst ? '3,50,000' : '45,000'}</span>
           </div>
           <div className="flex justify-between text-xs">
             <span className="text-zinc-500">Tx Count:</span>
@@ -405,7 +405,7 @@ const CaseMicroDonations = () => {
           
           <div className={`mt-2 p-2 rounded text-xs border transition-colors ${burst ? 'bg-red-50 border-red-200 text-red-800' : 'bg-zinc-50 border-zinc-200 text-zinc-500'}`}>
             {burst ? (
-              <span className="flex items-start gap-1"><AlertTriangle size={14} className="mt-0.5 shrink-0"/> cluster flagged: &gt;50 related wallets depositing $50-$60 rapidly.</span>
+              <span className="flex items-start gap-1"><AlertTriangle size={14} className="mt-0.5 shrink-0"/> cluster flagged: &gt;50 related wallets depositing ₹5,000-₹6,000 rapidly.</span>
             ) : (
               <span className="flex items-center gap-1"><CheckCircle size={14}/> Normal organic volume.</span>
             )}
