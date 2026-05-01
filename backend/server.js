@@ -20,17 +20,9 @@ app.use('/api/upload', require('./routes/upload'));
 
 // Chain Status Endpoint
 const { auditTrail } = require('./services/blockchainService');
-app.get('/api/chain/verify', async (req, res) => {
-  try {
-    const intact = await auditTrail.verifyChain();
-    const blockCount = Number(await auditTrail.getChainLength());
-    const lastBlock = await auditTrail.chain(blockCount - 1);
-    res.json({ intact, blockCount, lastBlockHash: lastBlock.blockHash });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+app.get('/dbname', (req, res) => {
+  res.json({ database: mongoose.connection.name });
 });
-
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
