@@ -1,11 +1,11 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   ShieldCheck, ShieldAlert, AlertTriangle, CheckCircle2,
   Search, Filter, Clock, ArrowUpRight, TrendingUp, Users,
   FileWarning, ChevronDown, ChevronUp, XCircle, Ban,
   Database, Activity, BarChart3, Layers
 } from "lucide-react";
-import ngoTransactions from "../data/ngo_transactions.json";
+import axios from "axios";
 
 /* ─── helpers ─── */
 const getSeverity = (ratio) => {
@@ -33,7 +33,7 @@ const StatCard = ({ label, value, sub, icon: Icon, accent }) => (
 /* ══════════════════════════════════════════════════════════
    LEGIT TAB
 ══════════════════════════════════════════════════════════ */
-const LegitTab = () => {
+const LegitTab = ({ ngoTransactions }) => {
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("All");
 
@@ -180,7 +180,7 @@ const LegitTab = () => {
 /* ══════════════════════════════════════════════════════════
    FLAGGED TAB  (absorbed from FlaggedTransactions.jsx)
 ══════════════════════════════════════════════════════════ */
-const FlaggedTab = () => {
+const FlaggedTab = ({ ngoTransactions }) => {
   const [search, setSearch]       = useState("");
   const [expandedRow, setExpanded] = useState(null);
   const [sortField, setSortField]  = useState("overspendRatio");
@@ -442,9 +442,33 @@ const FlaggedTab = () => {
 ══════════════════════════════════════════════════════════ */
 const NgoFundSpend = () => {
   const [activeTab, setActiveTab] = useState("legit");
+  const [ngoTransactions, setNgoTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/ngo-transactions`);
+        setNgoTransactions(response.data);
+      } catch (err) {
+        console.error("Error fetching NGO transactions:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const legitCount   = ngoTransactions.filter((t) => !t.flagged).length;
   const flaggedCount = ngoTransactions.filter((t) =>  t.flagged).length;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
+        <div className="text-zinc-500 font-medium animate-pulse">Loading database records...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#f8fafc] p-6 md:p-10 text-slate-900 w-full overflow-x-hidden">
@@ -504,8 +528,8 @@ const NgoFundSpend = () => {
 
         {/* ── Tab Content ── */}
         <div>
-          {activeTab === "legit"   && <LegitTab />}
-          {activeTab === "flagged" && <FlaggedTab />}
+          {activeTab === "legit"   && <LegitTab ngoTransactions={ngoTransactions} />}
+          {activeTab === "flagged" && <FlaggedTab ngoTransactions={ngoTransactions} />}
         </div>
 
       </div>
