@@ -13,6 +13,7 @@ import {
   Database
 } from 'lucide-react';
 import ngoTransactions from '../data/ngo_transactions.json';
+import disasterTransactions from '../data/disaster_relief_transactions.json';
 
 const PublicDashboard = () => {
   const { t } = useTranslation();
@@ -31,8 +32,9 @@ const PublicDashboard = () => {
         setChainStatus(chainRes.data);
       } catch (err) { 
         console.error(err);
-        // Fallback: use local synthetic data (only legit, non-flagged transactions)
-        const legitTxns = ngoTransactions.filter(tx => !tx.flagged).map(tx => ({
+        // Fallback: use local synthetic data (only legit, non-flagged transactions from all datasets)
+        const allDatasets = [...ngoTransactions, ...disasterTransactions];
+        const legitTxns = allDatasets.filter(tx => !tx.flagged).map(tx => ({
           ...tx,
           receiverName: tx.vendorName,
           status: 'committed',
