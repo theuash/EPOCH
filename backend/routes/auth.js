@@ -41,7 +41,7 @@ router.post('/login', async (req, res) => {
 router.post('/wallet-login', async (req, res) => {
   try {
     const { address, signature, message } = req.body;
-    
+
     // Verify signature
     const recoveredAddress = ethers.verifyMessage(message, signature);
     if (recoveredAddress.toLowerCase() !== address.toLowerCase()) {
