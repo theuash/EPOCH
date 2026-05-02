@@ -24,7 +24,8 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/transactions', require('./routes/transactions'));
 app.use('/api/flags', require('./routes/flags'));
 app.use('/api/upload', require('./routes/upload'));
-app.use('/api/ngo-transactions', require('./routes/ngoTransactions'));
+app.use('/api/ngo-transactions',      require('./routes/ngoTransactions'));
+app.use('/api/disaster-transactions', require('./routes/disasterTransactions'));
 
 // DB name helper
 app.get('/dbname', (req, res) => {
