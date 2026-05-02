@@ -114,7 +114,7 @@ const Landing = () => {
             </p>
 
             <div className="flex flex-wrap gap-4">
-              <Link to="/public" className="btn-premium btn-premium-primary text-base px-8 py-4">
+              <Link to="/ngo-spend-public" className="btn-premium btn-premium-primary text-base px-8 py-4">
                 {t('cta_public')} <ArrowRight className="ml-3" size={18} />
               </Link>
               <Link to="/login" className="btn-premium btn-premium-outline text-base px-8 py-4 bg-white">

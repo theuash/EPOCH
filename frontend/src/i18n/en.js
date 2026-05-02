@@ -5,7 +5,7 @@ export default {
     subtagline: "A blockchain-powered platform that tracks every rupee of public NGO funding — end-to-end, tamper-proof, and open to all.",
     kannada_tagline: "ಸಾರ್ವಜನಿಕ ಹಣದ ಹರಿವನ್ನು ಪಾರದರ್ಶಕವಾಗಿ ಮತ್ತು ಸುರಕ್ಷಿತವಾಗಿ ಟ್ರ್ಯಾಕ್ ಮಾಡಿ.",
     cta_public: "View Fund Transactions",
-    cta_login: "Enter as Admin / Auditor",
+    cta_login: "Enter as Donar",
     problem: {
       heading: "The Problem",
       body: "Every year, billions of rupees donated to NGOs across India go untracked. Donors have no way to verify how their money was used. Auditors work with spreadsheets that can be edited. The public has no window into fund utilisation. Trust is assumed — never proven.\n\nCorruption doesn't always look like theft. Sometimes it looks like a missing receipt, a suspiciously round payment, or funds quietly moving to a new account. Without a permanent, tamper-proof record, there is no accountability.",
