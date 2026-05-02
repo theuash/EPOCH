@@ -300,14 +300,6 @@ const Login = () => {
 
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="relative inline-flex mb-5">
-            <div className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center shadow-2xl shadow-slate-200">
-              <ShieldCheck size={28} className="text-white" />
-            </div>
-            <div className="absolute -bottom-1.5 -right-1.5 w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center shadow-md">
-              <Lock size={11} className="text-white" />
-            </div>
-          </div>
           <h2 className="text-3xl font-bold text-slate-900 mb-2 tracking-tight">System Access</h2>
           <p className="text-zinc-400 text-sm">Admin &amp; Donor via wallet · All roles via email · Auditor email only</p>
         </div>

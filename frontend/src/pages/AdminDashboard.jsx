@@ -479,10 +479,10 @@ const DonationsTable = ({ txns, loading }) => {
                   <tr className={tx.flagged ? "bg-rose-50/30" : "bg-emerald-50/20"}>
                     <td colSpan={8} className="px-6 py-4 border-b border-zinc-100">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="bg-slate-900 text-white rounded-xl p-4 space-y-2">
+                        <div className="bg-slate-900 text-white rounded-xl p-4 space-y-2 overflow-hidden">
                           <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">On-Chain Record</div>
-                          {[["TX ID", tx.txId, "font-mono text-xs"],["Block Hash", tx.blockHash, "font-mono text-xs break-all"],["Overspend", tx.overspendRatio + "x", "font-bold"],["Payment TX ID", tx.paymentTxId || "—", "font-mono text-xs"],["Description", tx.description, ""]].map(([k,v,cls]) => (
-                            <div key={k}><span className="text-[10px] text-slate-400 block">{k}</span><span className={`text-slate-200 ${cls}`}>{v}</span></div>
+                          {[["TX ID", tx.txId, "font-mono text-xs"],["Block Hash", tx.blockHash, "font-mono text-xs break-all"],["Overspend", tx.overspendRatio + "x", "font-bold"],["Payment TX ID", tx.paymentTxId || "—", "font-mono text-xs break-all"],["Description", tx.description, ""]].map(([k,v,cls]) => (
+                            <div key={k} className="min-w-0"><span className="text-[10px] text-slate-400 block">{k}</span><span className={`text-slate-200 block ${cls}`}>{v}</span></div>
                           ))}
                         </div>
                         {tx.flagged && tx.flagReasons?.length > 0 && (
