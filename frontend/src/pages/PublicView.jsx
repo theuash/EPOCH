@@ -1,9 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   Globe2, CalendarDays, TrendingUp, AlertTriangle,
-  CheckCircle2, Activity, Clock, MapPin, ArrowRight,
+  CheckCircle2, Activity, Clock, MapPin,
   ShieldCheck, Zap, XCircle
 } from 'lucide-react';
+import { MapContainer, TileLayer, CircleMarker, Polyline, Tooltip, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 import allTxns from '../data/ngo_transactions.json';
 
 /* ─────────────────────────────────────────────────────────
@@ -58,30 +60,50 @@ const StatCard = ({ icon: Icon, label, value, sub, accent, pulse }) => (
 );
 
 /* ─────────────────────────────────────────────────────────
-   FUND FLOW MAP (CSS-only India placeholder)
+   FUND FLOW MAP — real Leaflet / OpenStreetMap (no API key)
 ───────────────────────────────────────────────────────── */
+
+// [lat, lng] coordinates for each city
+const CITY_COORDS = {
+  Delhi:     [28.6139, 77.2090],
+  Mumbai:    [19.0760, 72.8777],
+  Bangalore: [12.9716, 77.5946],
+  Kolkata:   [22.5726, 88.3639],
+  Chennai:   [13.0827, 80.2707],
+  Lucknow:   [26.8467, 80.9462],
+  Pune:      [18.5204, 73.8567],
+  Hyderabad: [17.3850, 78.4867],
+};
+
 const FLOWS = [
-  { from: 'Delhi',     to: 'Mumbai',    amount: 75000,  project: 'National Highway Upgrade',  flagged: false, x1: 22, y1: 13, x2: 18, y2: 62 },
-  { from: 'Bangalore', to: 'Mysore',    amount: 25000,  project: 'Rural School Construction', flagged: false, x1: 30, y1: 72, x2: 26, y2: 79 },
-  { from: 'Kolkata',   to: 'Chennai',   amount: 50000,  project: 'Healthcare Supply Chain',   flagged: false, x1: 72, y1: 30, x2: 38, y2: 80 },
-  { from: 'Delhi',     to: 'Lucknow',   amount: 92000,  project: 'Phantom Infrastructure',    flagged: true,  x1: 22, y1: 13, x2: 38, y2: 22 },
-  { from: 'Mumbai',    to: 'Pune',      amount: 18000,  project: 'Women Skill Training',      flagged: false, x1: 18, y1: 62, x2: 22, y2: 67 },
+  { from: 'Delhi',     to: 'Mumbai',    amount: 75000, project: 'National Highway Upgrade',  flagged: false },
+  { from: 'Bangalore', to: 'Mysore',    amount: 25000, project: 'Rural School Construction', flagged: false },
+  { from: 'Kolkata',   to: 'Chennai',   amount: 50000, project: 'Healthcare Supply Chain',   flagged: false },
+  { from: 'Delhi',     to: 'Lucknow',   amount: 92000, project: 'Phantom Infrastructure',    flagged: true  },
+  { from: 'Mumbai',    to: 'Pune',      amount: 18000, project: 'Women Skill Training',      flagged: false },
 ];
 
-const CITY_NODES = [
-  { city: 'Delhi',     x: '22%', y: '13%' },
-  { city: 'Mumbai',    x: '18%', y: '62%' },
-  { city: 'Bangalore', x: '30%', y: '72%' },
-  { city: 'Kolkata',   x: '72%', y: '30%' },
-  { city: 'Chennai',   x: '38%', y: '80%' },
-  { city: 'Lucknow',   x: '38%', y: '22%' },
-  { city: 'Pune',      x: '22%', y: '67%' },
-  { city: 'Hyderabad', x: '34%', y: '68%' },
-];
+// Add Mysore coords (not in CITY_COORDS above)
+CITY_COORDS['Mysore'] = [12.2958, 76.6394];
+
+// Collect all unique cities used in flows
+const FLOW_CITIES = [...new Set(FLOWS.flatMap(f => [f.from, f.to]))];
+
+/* Fixes Leaflet's default icon path issue with bundlers */
+function FixLeafletIcons() {
+  const map = useMap();
+  useEffect(() => {
+    // nothing needed — we use CircleMarker which has no icon
+  }, [map]);
+  return null;
+}
 
 const MapSection = () => {
   const [activeFlow, setActiveFlow] = useState(null);
   const flow = activeFlow !== null ? FLOWS[activeFlow] : null;
+
+  // India bounding box center
+  const center = [22.5, 82.0];
 
   return (
     <section>
@@ -95,103 +117,135 @@ const MapSection = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Map canvas */}
-        <div className="lg:col-span-2 bg-white border border-zinc-200 rounded-2xl overflow-hidden shadow-sm relative"
-          style={{ minHeight: 420 }}>
-          {/* subtle grid */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#6366f108_1px,transparent_1px),linear-gradient(to_bottom,#6366f108_1px,transparent_1px)] bg-[size:40px_40px]" />
-          {/* India silhouette hint */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-[0.04] pointer-events-none select-none">
-            <svg viewBox="0 0 100 100" className="w-full h-full">
-              <polygon points="20,5 80,5 90,20 85,40 75,55 70,70 60,85 50,95 40,85 30,70 15,55 10,35 15,20"
-                fill="#6366f1" />
-            </svg>
-          </div>
 
-          {/* SVG flow lines */}
-          <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 2 }}>
+        {/* ── Real Leaflet Map ── */}
+        <div className="lg:col-span-2 rounded-2xl overflow-hidden shadow-sm border border-zinc-200" style={{ height: 440 }}>
+          <MapContainer
+            center={center}
+            zoom={5}
+            style={{ height: '100%', width: '100%' }}
+            scrollWheelZoom={false}
+            zoomControl={true}
+          >
+            <FixLeafletIcons />
+
+            {/* OpenStreetMap tiles — completely free, no API key */}
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+
+            {/* Flow lines */}
             {FLOWS.map((f, i) => {
-              const color = f.flagged ? '#ef4444' : '#10b981';
+              const from = CITY_COORDS[f.from];
+              const to   = CITY_COORDS[f.to];
+              if (!from || !to) return null;
               const isActive = activeFlow === i;
-              const mx = (f.x1 + f.x2) / 2;
-              const my = (f.y1 + f.y2) / 2 - 6;
+              const color = f.flagged ? '#f43f5e' : '#10b981';
               return (
-                <g key={i} style={{ cursor: 'pointer' }} onClick={() => setActiveFlow(isActive ? null : i)}>
-                  <line
-                    x1={`${f.x1}%`} y1={`${f.y1}%`}
-                    x2={`${f.x2}%`} y2={`${f.y2}%`}
-                    stroke={color}
-                    strokeWidth={isActive ? 3 : 2}
-                    strokeOpacity={isActive ? 1 : 0.55}
-                    strokeDasharray="6 4"
-                  >
-                    <animate attributeName="stroke-dashoffset" from="0" to="-20" dur="1.2s" repeatCount="indefinite" />
-                  </line>
-                  <circle cx={`${mx}%`} cy={`${my}%`} r={isActive ? 7 : 5} fill={color} fillOpacity={0.18}>
-                    <animate attributeName="r" values={isActive ? '7;10;7' : '5;7;5'} dur="1.5s" repeatCount="indefinite" />
-                  </circle>
-                  <circle cx={`${mx}%`} cy={`${my}%`} r={isActive ? 4 : 3} fill={color} />
-                </g>
+                <Polyline
+                  key={i}
+                  positions={[from, to]}
+                  pathOptions={{
+                    color,
+                    weight:    isActive ? 4 : 2.5,
+                    opacity:   isActive ? 1 : 0.65,
+                    dashArray: '8 5',
+                  }}
+                  eventHandlers={{
+                    click: () => setActiveFlow(isActive ? null : i),
+                  }}
+                >
+                  <Tooltip sticky>
+                    <div style={{ minWidth: 160 }}>
+                      <div style={{ fontWeight: 700, fontSize: 12, marginBottom: 2 }}>{f.project}</div>
+                      <div style={{ fontSize: 11, color: '#64748b' }}>{f.from} → {f.to}</div>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: f.flagged ? '#e11d48' : '#059669', marginTop: 4 }}>
+                        {f.flagged ? '⚠ Flagged' : '✓ Verified'} · ₹{f.amount.toLocaleString('en-IN')}
+                      </div>
+                    </div>
+                  </Tooltip>
+                </Polyline>
               );
             })}
-          </svg>
 
-          {/* City nodes */}
-          {CITY_NODES.map((n) => (
-            <div key={n.city} className="absolute flex flex-col items-center"
-              style={{ left: n.x, top: n.y, transform: 'translate(-50%,-50%)', zIndex: 3 }}>
-              <div className="relative w-3 h-3 rounded-full bg-indigo-500 border-2 border-white shadow-md">
-                <span className="absolute inset-0 rounded-full bg-indigo-400 animate-ping opacity-50" />
-              </div>
-              <span className="mt-1 text-[9px] font-bold text-slate-600 bg-white/90 px-1 rounded shadow-sm whitespace-nowrap">
-                {n.city}
-              </span>
-            </div>
-          ))}
-
-          {/* Active popup */}
-          {flow && (
-            <div className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-64
-              bg-white border border-zinc-200 rounded-xl shadow-xl p-4 z-10">
-              <div className="flex items-center justify-between mb-2">
-                <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full
-                  ${flow.flagged ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-700'}`}>
-                  {flow.flagged ? '⚠ Flagged' : '✓ Verified'}
-                </span>
-                <button onClick={() => setActiveFlow(null)} className="text-zinc-400 hover:text-zinc-700 text-lg leading-none">×</button>
-              </div>
-              <div className="font-bold text-slate-900 text-sm mb-1">{flow.project}</div>
-              <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-2">
-                <MapPin size={11} /> {flow.from} <ArrowRight size={11} /> {flow.to}
-              </div>
-              <div className="font-mono font-bold text-indigo-600 text-lg">{fmt(flow.amount)}</div>
-            </div>
-          )}
-
-          <div className="absolute bottom-3 right-3 text-[9px] text-zinc-300 font-mono z-10">
-            Click a flow line for details
-          </div>
+            {/* City nodes */}
+            {FLOW_CITIES.map((city) => {
+              const coords = CITY_COORDS[city];
+              if (!coords) return null;
+              // Is this city part of the active flow?
+              const inActive = flow && (flow.from === city || flow.to === city);
+              return (
+                <CircleMarker
+                  key={city}
+                  center={coords}
+                  radius={inActive ? 9 : 6}
+                  pathOptions={{
+                    color:       '#6366f1',
+                    fillColor:   inActive ? '#6366f1' : '#818cf8',
+                    fillOpacity: 0.9,
+                    weight:      2,
+                  }}
+                >
+                  <Tooltip permanent direction="top" offset={[0, -8]}>
+                    <span style={{ fontSize: 11, fontWeight: 700 }}>{city}</span>
+                  </Tooltip>
+                </CircleMarker>
+              );
+            })}
+          </MapContainer>
         </div>
 
-        {/* Legend + blockchain status */}
+        {/* ── Right panel: Active Flows + Blockchain status ── */}
         <div className="flex flex-col gap-4">
           <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-sm">
             <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4">Active Flows</div>
             <div className="space-y-2">
-              {FLOWS.map((f, i) => (
-                <button key={i} onClick={() => setActiveFlow(activeFlow === i ? null : i)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all
-                    ${activeFlow === i
-                      ? f.flagged ? 'border-rose-300 bg-rose-50' : 'border-indigo-300 bg-indigo-50'
-                      : 'border-zinc-100 hover:border-zinc-200 hover:bg-slate-50'}`}>
-                  <div className={`w-2 h-2 rounded-full shrink-0 ${f.flagged ? 'bg-rose-500' : 'bg-emerald-500'}`} />
-                  <div className="flex-grow min-w-0">
-                    <div className="text-xs font-semibold text-slate-800 truncate">{f.from} → {f.to}</div>
-                    <div className="text-[10px] text-slate-400 truncate">{f.project}</div>
-                  </div>
-                  <div className="font-mono text-xs font-bold text-slate-700 shrink-0">{fmt(f.amount)}</div>
-                </button>
-              ))}
+              {FLOWS.map((f, i) => {
+                const isActive = activeFlow === i;
+                return (
+                  <button
+                    key={i}
+                    onClick={() => setActiveFlow(isActive ? null : i)}
+                    className={[
+                      'w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all',
+                      isActive
+                        ? f.flagged ? 'border-rose-300 bg-rose-50' : 'border-indigo-300 bg-indigo-50'
+                        : 'border-zinc-100 hover:border-zinc-200 hover:bg-slate-50',
+                    ].join(' ')}
+                  >
+                    {/* status dot */}
+                    <span
+                      className="shrink-0 w-2.5 h-2.5 rounded-full"
+                      style={{ backgroundColor: f.flagged ? '#f43f5e' : '#10b981' }}
+                    />
+                    {/* text */}
+                    <span className="flex-grow min-w-0 overflow-hidden">
+                      <span className="block text-xs font-semibold text-slate-800 truncate leading-snug">
+                        {f.project}
+                      </span>
+                      <span className="flex items-center gap-1 mt-0.5">
+                        <MapPin size={9} className="text-slate-400 shrink-0" />
+                        <span className="text-[10px] text-slate-500 truncate">
+                          {f.from} → {f.to}
+                        </span>
+                        <span
+                          className="shrink-0 ml-1 px-1.5 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider"
+                          style={f.flagged
+                            ? { backgroundColor: '#fee2e2', color: '#e11d48' }
+                            : { backgroundColor: '#d1fae5', color: '#059669' }}
+                        >
+                          {f.flagged ? '⚠ Flagged' : '✓ Clean'}
+                        </span>
+                      </span>
+                    </span>
+                    {/* amount */}
+                    <span className="shrink-0 font-mono text-xs font-bold text-slate-700">
+                      {fmt(f.amount)}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -210,7 +264,7 @@ const MapSection = () => {
               ].map(([k, v]) => (
                 <div key={k} className="flex justify-between items-center">
                   <span className="text-slate-400">{k}</span>
-                  <span className={`font-mono font-bold ${k === 'Network' ? 'text-emerald-400' : 'text-slate-200'}`}>{v}</span>
+                  <span style={{ fontFamily: 'monospace', fontWeight: 700, color: k === 'Network' ? '#34d399' : '#e2e8f0' }}>{v}</span>
                 </div>
               ))}
             </div>

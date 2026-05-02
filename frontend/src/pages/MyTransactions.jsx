@@ -39,9 +39,9 @@ const TX_MAP = Object.fromEntries(allTxns.map(t => [t.txId, t]));
 
 /* ── helpers ─────────────────────────────────────────────────────────── */
 const fmt = n =>
-  n >= 1e7 ? "Rs." + (n/1e7).toFixed(2) + " Cr"
-  : n >= 1e5 ? "Rs." + (n/1e5).toFixed(1) + " L"
-  : "Rs." + Number(n).toLocaleString("en-IN");
+  n >= 1e7 ? "₹" + (n/1e7).toFixed(2) + " Cr"
+  : n >= 1e5 ? "₹" + (n/1e5).toFixed(1) + " L"
+  : "₹" + Number(n).toLocaleString("en-IN");
 
 const fmtDate = ts =>
   new Date(ts * 1000).toLocaleDateString("en-IN", { day:"2-digit", month:"short", year:"numeric" });
