@@ -3,21 +3,45 @@ const router = express.Router();
 const NgoTransaction = require('../models/NgoTransaction');
 const crypto = require('crypto');
 
-/* ── fraud detection rules (mirrors smart contract logic) ── */
+/* ── fraud detection rules ─────────────────────────────── */
 function detectFraud(data) {
   const reasons = [];
-  const { amount, avgMonthlyBudget, vendorRepeatPct, milestoneApproved } = data;
+  const { amount, avgMonthlyBudget, vendorRepeatPct, milestoneApproved, description, paymentTxId } = data;
 
   const overspendRatio = avgMonthlyBudget > 0 ? amount / avgMonthlyBudget : 0;
 
+  // Rule 1: Overspend — amount > 3× average monthly budget
   if (overspendRatio >= 3) {
     reasons.push(`Spend ${overspendRatio.toFixed(1)}x avg monthly budget (threshold: 3x)`);
   }
+
+  // Rule 2: No milestone approval
   if (!milestoneApproved) {
     reasons.push('No milestone approval on record');
   }
+
+  // Rule 3: Vendor concentration — same vendor used in >80% of NGO transactions
   if (vendorRepeatPct > 80) {
     reasons.push(`Vendor repeat rate ${vendorRepeatPct}% (threshold: 80%)`);
+  }
+
+  // Rule 4: Round-number suspicious amount (exact multiples of 10000 above 50000)
+  if (amount >= 50000 && amount % 10000 === 0) {
+    reasons.push(`Suspicious round-number amount ₹${Number(amount).toLocaleString('en-IN')} — common in phantom transactions`);
+  }
+
+  // Rule 5: Vague description (too short or generic keywords)
+  const vagueKeywords = ['misc', 'miscellaneous', 'other', 'general', 'various', 'expenses', 'payment'];
+  const descLower = (description || '').toLowerCase().trim();
+  if (descLower.length < 15) {
+    reasons.push('Description too vague — insufficient detail for audit trail');
+  } else if (vagueKeywords.some(k => descLower === k || descLower.startsWith(k + ' '))) {
+    reasons.push(`Vague description "${description}" — does not describe specific deliverables`);
+  }
+
+  // Rule 6: Missing payment reference
+  if (!paymentTxId || paymentTxId.trim().length < 4) {
+    reasons.push('Missing or invalid payment transaction reference');
   }
 
   return { flagged: reasons.length > 0, flagReasons: reasons, overspendRatio };
@@ -83,6 +107,8 @@ router.post('/', async (req, res) => {
       avgMonthlyBudget: Number(avgMonthlyBudget),
       vendorRepeatPct: Number(vendorRepeatPct || 0),
       milestoneApproved: Boolean(milestoneApproved),
+      description: description || '',
+      paymentTxId: paymentTxId || '',
     });
 
     // 5. Build and save document

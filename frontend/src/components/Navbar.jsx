@@ -2,7 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Globe, LogOut, ShieldAlert, LayoutDashboard, Globe2, Layers, Users, Eye, Receipt, Home } from 'lucide-react';
+import { Globe, LogOut, LayoutDashboard, Globe2, Layers, Users, Eye, Receipt, Home } from 'lucide-react';
 
 const Navbar = () => {
   const { t, i18n } = useTranslation();
@@ -48,13 +48,10 @@ const Navbar = () => {
     <nav className="bg-white sticky top-0 z-50 border-b border-zinc-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
 
-        {/* Brand */}
-        <Link to="/" className="flex items-center gap-2.5 no-underline group shrink-0">
-          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shadow ${isPublic ? 'bg-slate-800 shadow-slate-200' : logoMap[accentColor]}`}>
-            <ShieldAlert size={16} className="text-white" />
-          </div>
+        {/* Brand — text only, no icon */}
+        <Link to="/" className="flex items-center no-underline group shrink-0">
           <span className="text-lg font-bold tracking-tight text-slate-900">
-            Secure Node<span className={isPublic ? 'text-slate-500' : `text-${accentColor}-600`}>.</span>
+            Secure Node.
           </span>
         </Link>
 
@@ -73,7 +70,7 @@ const Navbar = () => {
                 <Layers size={13} /> NGO Spend
               </Link>
               <Link to="/login" className={`flex items-center gap-1.5 px-3 py-2 rounded-lg ${active('/login')}`}>
-                <ShieldAlert size={13} /> Login
+                Login
               </Link>
             </div>
           )}
@@ -140,7 +137,6 @@ const Navbar = () => {
                 <span className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${badgeMap[accentColor]}`}>
                   {isAuditor && <Eye size={11} />}
                   {isDonor   && <Receipt size={11} />}
-                  {isAdmin   && <ShieldAlert size={11} />}
                   {user.role}
                   {user.name && <span className="opacity-60 normal-case font-normal">· {user.name.split(' ')[0]}</span>}
                 </span>
