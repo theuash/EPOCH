@@ -3,9 +3,13 @@ import {
   ShieldCheck, ShieldAlert, AlertTriangle, CheckCircle2,
   Search, Filter, Clock, ArrowUpRight, TrendingUp, Users,
   FileWarning, ChevronDown, ChevronUp, XCircle, Ban,
-  Database, Activity, BarChart3, Layers
+  Database, Activity, BarChart3, Layers, Eye, RefreshCw
 } from "lucide-react";
 import axios from "axios";
+import { useAuth } from "../context/AuthContext";
+import localTxns from "../data/ngo_transactions.json";
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 /* ─── helpers ─── */
 const getSeverity = (ratio) => {
@@ -51,10 +55,7 @@ const LegitTab = ({ ngoTransactions }) => {
     }
     if (catFilter !== "All") txns = txns.filter((tx) => tx.category === catFilter);
     return txns;
-  }, [search, catFilter]);
-
-  const categories = ["All", ...new Set(ngoTransactions.filter((t) => !t.flagged).map((t) => t.category))];
-  const totalAmount = legitTxns.reduce((s, t) => s + t.amount, 0);
+  }, [ngoTransactions, search, catFilter]);
 
   return (
     <div>
@@ -164,7 +165,8 @@ const LegitTab = ({ ngoTransactions }) => {
         {legitTxns.length === 0 && (
           <div className="py-20 text-center">
             <Database size={40} className="mx-auto text-zinc-200 mb-4" strokeWidth={1} />
-            <p className="text-zinc-500 text-sm">No matching transactions found.</p>
+            <p className="text-zinc-500 text-sm font-semibold mb-1">No legit transactions yet</p>
+            <p className="text-zinc-400 text-xs">Submit a milestone transaction from the Admin Dashboard to see it here.</p>
           </div>
         )}
       </div>
@@ -214,7 +216,7 @@ const FlaggedTab = ({ ngoTransactions }) => {
       return sortDir === "asc" ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
     });
     return txns;
-  }, [search, sortField, sortDir, sevFilter, catFilter]);
+  }, [ngoTransactions, search, sortField, sortDir, sevFilter, catFilter]);
 
   const totalFlagged       = flaggedTxns.length;
   const totalFlaggedAmount = flaggedTxns.reduce((s, tx) => s + tx.amount, 0);
@@ -444,20 +446,27 @@ const NgoFundSpend = () => {
   const [activeTab, setActiveTab] = useState("legit");
   const [ngoTransactions, setNgoTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [dataSource, setDataSource] = useState("api"); // "api" | "local"
+  const { user } = useAuth();
+  const isAuditor = user?.role === "auditor";
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/ngo-transactions`);
-        setNgoTransactions(response.data);
-      } catch (err) {
-        console.error("Error fetching NGO transactions:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get(`${API_BASE}/ngo-transactions`, { timeout: 5000 });
+      // Always use live DB data — even if empty (admin hasn't submitted yet)
+      setNgoTransactions(Array.isArray(res.data) ? res.data : []);
+      setDataSource("api");
+    } catch {
+      // Backend offline — fall back to local JSON seed data
+      setNgoTransactions(localTxns);
+      setDataSource("local");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchData(); }, []);
 
   const legitCount   = ngoTransactions.filter((t) => !t.flagged).length;
   const flaggedCount = ngoTransactions.filter((t) =>  t.flagged).length;
@@ -476,14 +485,36 @@ const NgoFundSpend = () => {
 
         {/* ── Page Header ── */}
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center gap-3 mb-2 flex-wrap">
             <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
               <Layers size={20} className="text-white" />
             </div>
             <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900">NGO Fund Spend</h1>
+            {isAuditor && (
+              <span className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-100 text-indigo-700 text-[10px] font-bold rounded-full border border-indigo-200 uppercase tracking-wider">
+                <Eye size={11} /> Auditor — Extended View
+              </span>
+            )}
+            {/* Data source badge */}
+            <span className={`flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold rounded-full border uppercase tracking-wider ml-auto ${
+              dataSource === "api"
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                : "bg-amber-50 text-amber-700 border-amber-200"
+            }`}>
+              <span className={`w-1.5 h-1.5 rounded-full inline-block ${dataSource === "api" ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`} />
+              {dataSource === "api" ? "Live — MongoDB" : "Demo data — backend offline"}
+            </span>
+            <button
+              onClick={fetchData}
+              className="flex items-center gap-1.5 px-3 py-1.5 border border-zinc-200 rounded-xl text-[10px] font-bold uppercase tracking-wider text-zinc-500 hover:bg-zinc-50 transition-colors"
+            >
+              <RefreshCw size={11} /> Refresh
+            </button>
           </div>
           <p className="text-slate-500 text-base font-light ml-[52px]">
-            Complete on-chain transaction ledger — whitelisted projects and auto-flagged anomalies.
+            {isAuditor
+              ? "Full audit detail — vendor addresses, overspend ratios, vendor concentration, and on-chain evidence."
+              : "Complete on-chain transaction ledger — whitelisted projects and auto-flagged anomalies."}
           </p>
         </div>
 
