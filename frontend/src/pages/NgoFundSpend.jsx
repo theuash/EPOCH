@@ -400,17 +400,17 @@ const FlaggedTab = ({ ngoTransactions }) => {
                               </div>
                               <div>
                                 <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3">On-Chain Record</div>
-                                <div className="space-y-3 text-sm bg-white border border-zinc-200 rounded-xl p-4">
+                                <div className="space-y-3 text-sm bg-white border border-zinc-200 rounded-xl p-4 overflow-hidden">
                                   {[
                                     ["TX ID",           tx.txId,                                                    "font-mono"],
-                                    ["Block Hash",      tx.blockHash,                                               "font-mono text-xs"],
+                                    ["Block Hash",      tx.blockHash,                                               "font-mono text-xs break-all"],
                                     ["Description",     tx.description,                                             ""],
                                     ["Milestone",       tx.milestoneApproved ? "✓ Approved" : "✕ Not Approved",    tx.milestoneApproved ? "text-emerald-600 font-bold" : "text-rose-600 font-bold"],
                                     ["Vendor Repeat",   `${tx.vendorRepeatPct}%`,                                   tx.vendorRepeatPct > 80 ? "text-rose-600 font-bold" : "font-bold"],
                                   ].map(([label, val, cls]) => (
-                                    <div key={label}>
+                                    <div key={label} className="min-w-0">
                                       <span className="text-zinc-400 text-xs block">{label}</span>
-                                      <span className={`text-slate-900 ${cls}`}>{val}</span>
+                                      <span className={`text-slate-900 block ${cls}`}>{val}</span>
                                     </div>
                                   ))}
                                 </div>

@@ -88,7 +88,7 @@ const Navbar = () => {
           {isAuditor && (
             <div className="hidden md:flex items-center gap-1 text-xs font-bold text-zinc-500 uppercase tracking-widest mr-2">
               <Link to="/auditor-home" className={`flex items-center gap-1.5 px-3 py-2 rounded-lg ${active('/auditor-home')}`}>
-                <LayoutDashboard size={13} /> Home
+                <LayoutDashboard size={13} /> Dashboard
               </Link>
               <Link to="/auditor-ngo" className={`flex items-center gap-1.5 px-3 py-2 rounded-lg ${active('/auditor-ngo')}`}>
                 <Layers size={13} /> NGO Spend

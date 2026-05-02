@@ -58,11 +58,63 @@ router.get('/', async (req, res) => {
   }
 });
 
-/* ── GET /api/ngo-transactions/legit — non-flagged only (for NGO Spend page) ── */
+/* ── GET /api/ngo-transactions/legit ── */
 router.get('/legit', async (req, res) => {
   try {
     const transactions = await NgoTransaction.find({ flagged: false }).sort({ timestamp: -1 });
     res.json(transactions);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ── PATCH /api/ngo-transactions/:txId/audit — approve or reject milestone ── */
+router.patch('/:txId/audit', async (req, res) => {
+  try {
+    const { action, note, auditorName } = req.body; // action: 'approved' | 'rejected'
+    if (!['approved', 'rejected'].includes(action)) {
+      return res.status(400).json({ error: 'action must be "approved" or "rejected"' });
+    }
+    const doc = await NgoTransaction.findOneAndUpdate(
+      { txId: req.params.txId },
+      {
+        auditStatus: action,
+        auditNote: note || '',
+        auditedAt: new Date(),
+        auditedBy: auditorName || 'Auditor',
+      },
+      { new: true }
+    );
+    if (!doc) return res.status(404).json({ error: 'Transaction not found' });
+    res.json({ success: true, auditStatus: doc.auditStatus, auditNote: doc.auditNote });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ── POST /api/ngo-transactions/:txId/inquire — auditor raises a question to NGO ── */
+router.post('/:txId/inquire', async (req, res) => {
+  try {
+    const { question, askedBy } = req.body;
+    if (!question || question.trim().length < 5) {
+      return res.status(400).json({ error: 'Question must be at least 5 characters' });
+    }
+    const doc = await NgoTransaction.findOneAndUpdate(
+      { txId: req.params.txId },
+      {
+        $push: {
+          inquiries: {
+            question: question.trim(),
+            askedBy: askedBy || 'Auditor',
+            askedAt: new Date(),
+            status: 'open',
+          },
+        },
+      },
+      { new: true }
+    );
+    if (!doc) return res.status(404).json({ error: 'Transaction not found' });
+    res.json({ success: true, inquiries: doc.inquiries });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

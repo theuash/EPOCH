@@ -183,18 +183,18 @@ const TxRow = ({ tx }) => {
                 <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-2">
                   <Hash size={12} /> On-Chain Record
                 </div>
-                <div className="bg-white border border-zinc-200 rounded-xl p-4 space-y-3">
+                <div className="bg-white border border-zinc-200 rounded-xl p-4 space-y-3 overflow-hidden">
                   {[
-                    ["Block Hash",   tx.blockHash,                                                  "font-mono text-xs text-indigo-600"],
+                    ["Block Hash",   tx.blockHash,                                                  "font-mono text-xs text-indigo-600 break-all"],
                     ["Description",  tx.description,                                                "text-slate-700"],
                     ["Milestone",    tx.milestoneApproved ? "Approved" : "Not Approved",           tx.milestoneApproved ? "text-emerald-600 font-bold" : "text-rose-600 font-bold"],
                     ["Vendor",       tx.vendorName,                                                 "text-slate-700"],
                     ["Budget",       fmt(tx.avgMonthlyBudget) + " / month",                        "font-mono text-slate-700"],
                     ["Spend Ratio",  tx.overspendRatio + "x of monthly budget",                    tx.overspendRatio >= 3 ? "text-rose-600 font-bold" : "text-emerald-600 font-bold"],
                   ].map(([label, val, cls]) => (
-                    <div key={label} className="flex flex-col gap-0.5">
+                    <div key={label} className="flex flex-col gap-0.5 min-w-0">
                       <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">{label}</span>
-                      <span className={`text-sm ${cls}`}>{val}</span>
+                      <span className={`text-sm block ${cls}`}>{val}</span>
                     </div>
                   ))}
                 </div>
