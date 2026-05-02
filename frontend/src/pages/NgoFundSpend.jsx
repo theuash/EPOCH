@@ -8,6 +8,8 @@ import {
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import localTxns from "../data/ngo_transactions.json";
+import ReliefDiversionSim from "../components/ReliefDiversionSim";
+import MoneyLaunderingSim from "../components/MoneyLaunderingSim";
 
 const API_BASE = '/api';
 
@@ -438,6 +440,16 @@ const FlaggedTab = ({ ngoTransactions }) => {
         <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-rose-500 inline-block animate-pulse" />Smart Contract Auto-Flagging Active</span>
         <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-slate-800 inline-block" />Immutable Ledger — Tamper-Proof</span>
       </div>
+
+      {/* ══════════════════════════════════════════════
+          EDGE CASE 2: DISASTER RELIEF DIVERSION SIM
+      ══════════════════════════════════════════════ */}
+      <ReliefDiversionSim />
+
+      {/* ══════════════════════════════════════════════
+          EDGE CASE 3: DONOR MONEY LAUNDERING SIM
+      ══════════════════════════════════════════════ */}
+      <MoneyLaunderingSim />
     </div>
   );
 };
