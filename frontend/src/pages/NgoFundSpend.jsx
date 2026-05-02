@@ -3,7 +3,8 @@ import {
   ShieldCheck, ShieldAlert, AlertTriangle, CheckCircle2,
   Search, Filter, Clock, ArrowUpRight, TrendingUp, Users,
   FileWarning, ChevronDown, ChevronUp, XCircle, Ban,
-  Database, Activity, BarChart3, Layers, Eye, RefreshCw
+  Database, Activity, BarChart3, Layers, Eye, RefreshCw,
+  UserX, Plus, Trash2, Lock, Info, TriangleAlert
 } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
@@ -443,13 +444,408 @@ const FlaggedTab = ({ ngoTransactions }) => {
 };
 
 /* ══════════════════════════════════════════════════════════
+   SUSPECTED NGOs TAB
+   - Auto-populates NGOs that have flagged transactions
+   - Auditor can manually add/remove NGOs with a reason
+   - Persisted in localStorage (no backend change needed)
+══════════════════════════════════════════════════════════ */
+const STORAGE_KEY = "suspected_ngos_v1";
+
+const SuspectedTab = ({ ngoTransactions, isAuditor }) => {
+  const fmt     = (n) => "₹" + Number(n).toLocaleString("en-IN");
+  const fmtDate = (ts) => new Date(ts * 1000).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+
+  // Load auditor-added entries from localStorage
+  const [manualEntries, setManualEntries] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
+    catch { return []; }
+  });
+
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [addNgo, setAddNgo]           = useState("");
+  const [addReason, setAddReason]     = useState("");
+  const [expanded, setExpanded]       = useState(null);
+
+  const saveEntries = (entries) => {
+    setManualEntries(entries);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  };
+
+  const handleAdd = () => {
+    if (!addNgo.trim() || !addReason.trim()) return;
+    const entry = {
+      ngoName:   addNgo.trim(),
+      reason:    addReason.trim(),
+      addedAt:   Date.now(),
+      addedBy:   "Auditor",
+      manual:    true,
+    };
+    saveEntries([...manualEntries, entry]);
+    setAddNgo(""); setAddReason(""); setShowAddForm(false);
+  };
+
+  const handleRemove = (ngoName) => {
+    saveEntries(manualEntries.filter(e => e.ngoName !== ngoName));
+  };
+
+  // Build per-NGO stats from transactions
+  const ngoStats = useMemo(() => {
+    const map = {};
+    ngoTransactions.forEach(tx => {
+      if (!map[tx.ngoName]) {
+        map[tx.ngoName] = { ngoName: tx.ngoName, total: 0, flagged: 0, totalAmount: 0, flaggedAmount: 0, flagReasons: new Set(), txns: [] };
+      }
+      map[tx.ngoName].total++;
+      map[tx.ngoName].totalAmount += tx.amount;
+      map[tx.ngoName].txns.push(tx);
+      if (tx.flagged) {
+        map[tx.ngoName].flagged++;
+        map[tx.ngoName].flaggedAmount += tx.amount;
+        tx.flagReasons.forEach(r => map[tx.ngoName].flagReasons.add(r));
+      }
+    });
+    return map;
+  }, [ngoTransactions]);
+
+  // Auto-suspected: NGOs with ≥1 flagged transaction
+  const autoSuspected = useMemo(() =>
+    Object.values(ngoStats)
+      .filter(s => s.flagged > 0)
+      .sort((a, b) => b.flagged - a.flagged),
+    [ngoStats]
+  );
+
+  // Merge auto + manual (deduplicate by ngoName)
+  const allSuspected = useMemo(() => {
+    const autoNames = new Set(autoSuspected.map(s => s.ngoName));
+    const manualOnly = manualEntries.filter(e => !autoNames.has(e.ngoName));
+    return [
+      ...autoSuspected.map(s => ({
+        ...s,
+        flagReasons: [...s.flagReasons],
+        manual: false,
+        manualEntry: manualEntries.find(e => e.ngoName === s.ngoName) || null,
+      })),
+      ...manualOnly.map(e => ({
+        ngoName:       e.ngoName,
+        total:         ngoStats[e.ngoName]?.total || 0,
+        flagged:       ngoStats[e.ngoName]?.flagged || 0,
+        totalAmount:   ngoStats[e.ngoName]?.totalAmount || 0,
+        flaggedAmount: ngoStats[e.ngoName]?.flaggedAmount || 0,
+        flagReasons:   ngoStats[e.ngoName] ? [...ngoStats[e.ngoName].flagReasons] : [],
+        txns:          ngoStats[e.ngoName]?.txns || [],
+        manual:        true,
+        manualEntry:   e,
+      })),
+    ];
+  }, [autoSuspected, manualEntries, ngoStats]);
+
+  // Only NGOs with at least one flagged transaction can be added
+  const flaggedNgoNames = useMemo(() =>
+    [...new Set(ngoTransactions.filter(t => t.flagged).map(t => t.ngoName))].sort(),
+    [ngoTransactions]
+  );
+
+  const getSuspicionLevel = (flagged, total) => {
+    const ratio = total > 0 ? flagged / total : 0;
+    if (ratio >= 0.7 || flagged >= 3) return { label: "HIGH",   color: "#e11d48", bg: "#fff1f2", border: "#fecdd3" };
+    if (ratio >= 0.4 || flagged >= 2) return { label: "MEDIUM", color: "#d97706", bg: "#fffbeb", border: "#fde68a" };
+    return                             { label: "LOW",    color: "#ca8a04", bg: "#fefce8", border: "#fef08a" };
+  };
+
+  return (
+    <div>
+      {/* Header banner */}
+      <div className="flex items-start gap-4 px-6 py-5 bg-slate-900 text-white rounded-2xl mb-8">
+        <div className="w-10 h-10 bg-rose-600 rounded-xl flex items-center justify-center shrink-0">
+          <UserX size={20} className="text-white" />
+        </div>
+        <div className="flex-grow">
+          <div className="font-bold text-lg tracking-tight mb-1">Suspected NGOs</div>
+          <div className="text-slate-400 text-sm">
+            NGOs are auto-flagged when their transactions trigger fraud detection rules.
+            {isAuditor && " As auditor, you can also manually add NGOs under investigation."}
+          </div>
+        </div>
+        <div className="flex flex-col items-end gap-2 shrink-0">
+          <div className="text-3xl font-bold text-rose-400">{allSuspected.length}</div>
+          <div className="text-[10px] text-slate-400 uppercase tracking-widest">Under Suspicion</div>
+        </div>
+      </div>
+
+      {/* Stats row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {[
+          { label: "Suspected NGOs",    value: allSuspected.length,                                                                  color: "#e11d48", bg: "#fff1f2" },
+          { label: "Total Flagged Txns", value: allSuspected.reduce((s, n) => s + n.flagged, 0),                                    color: "#d97706", bg: "#fffbeb" },
+          { label: "Amount at Risk",    value: fmt(allSuspected.reduce((s, n) => s + n.flaggedAmount, 0)),                           color: "#7c3aed", bg: "#f5f3ff" },
+          { label: "Auditor-Added",     value: manualEntries.length,                                                                 color: "#0369a1", bg: "#f0f9ff" },
+        ].map(({ label, value, color, bg }) => (
+          <div key={label} className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-sm">
+            <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2">{label}</div>
+            <div className="text-2xl font-bold" style={{ color }}>{value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Auditor add button */}
+      {isAuditor && (
+        <div className="mb-6">
+          {!showAddForm ? (
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="flex items-center gap-2 px-5 py-2.5 bg-rose-600 text-white rounded-xl text-sm font-bold hover:bg-rose-700 transition-colors shadow-sm"
+            >
+              <Plus size={15} /> Add NGO to Suspected List
+            </button>
+          ) : (
+            <div className="bg-white border-2 border-rose-200 rounded-2xl p-5 space-y-4">
+              <div className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                <UserX size={15} className="text-rose-600" /> Add NGO Under Investigation
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">NGO Name *</label>
+                  <select
+                    className="w-full px-3 py-2.5 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition bg-white"
+                    value={addNgo}
+                    onChange={e => setAddNgo(e.target.value)}
+                  >
+                    <option value="">Select a flagged NGO…</option>
+                    {flaggedNgoNames.map(n => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] text-zinc-400 mt-1.5 flex items-center gap-1">
+                    <AlertTriangle size={9} className="text-amber-500 shrink-0" />
+                    Only NGOs with flagged transactions can be added to the suspected list.
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Reason for Suspicion *</label>
+                  <input
+                    type="text"
+                    className="w-full px-3 py-2.5 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition"
+                    placeholder="e.g. Repeated vendor lock-in, phantom beneficiaries…"
+                    value={addReason}
+                    onChange={e => setAddReason(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleAdd}
+                  disabled={!addNgo.trim() || addNgo === "__custom__" || !addReason.trim()}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-rose-600 text-white rounded-xl text-sm font-bold hover:bg-rose-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Plus size={14} /> Confirm
+                </button>
+                <button
+                  onClick={() => { setShowAddForm(false); setAddNgo(""); setAddReason(""); }}
+                  className="px-5 py-2.5 border border-zinc-200 text-zinc-600 rounded-xl text-sm font-bold hover:bg-zinc-50 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* NGO cards */}
+      {allSuspected.length === 0 ? (
+        <div className="py-20 text-center">
+          <ShieldCheck size={44} className="mx-auto text-emerald-300 mb-4" strokeWidth={1} />
+          <p className="text-zinc-500 text-sm font-semibold mb-1">No suspected NGOs</p>
+          <p className="text-zinc-400 text-xs">All NGOs have clean transaction records.</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {allSuspected.map((ngo) => {
+            const level   = getSuspicionLevel(ngo.flagged, ngo.total);
+            const isOpen  = expanded === ngo.ngoName;
+            const manual  = ngo.manualEntry;
+            const initials = ngo.ngoName.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+
+            return (
+              <div
+                key={ngo.ngoName}
+                className="bg-white border-2 rounded-2xl overflow-hidden shadow-sm transition-all"
+                style={{ borderColor: isOpen ? level.border : "#e4e4e7" }}
+              >
+                {/* Card header */}
+                <div
+                  className="flex items-center gap-4 px-6 py-5 cursor-pointer hover:bg-slate-50/60 transition-colors"
+                  onClick={() => setExpanded(isOpen ? null : ngo.ngoName)}
+                >
+                  {/* Avatar */}
+                  <div
+                    className="w-11 h-11 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0"
+                    style={{ backgroundColor: level.color }}
+                  >
+                    {initials}
+                  </div>
+
+                  {/* Name + badges */}
+                  <div className="flex-grow min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold text-slate-900 text-sm">{ngo.ngoName}</span>
+                      {/* Suspicion level badge */}
+                      <span
+                        className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border"
+                        style={{ backgroundColor: level.bg, color: level.color, borderColor: level.border }}
+                      >
+                        {level.label} SUSPICION
+                      </span>
+                      {/* Manual badge */}
+                      {manual && (
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-sky-50 text-sky-700 border border-sky-200">
+                          Auditor-Added
+                        </span>
+                      )}
+                    </div>
+                    {/* Manual reason */}
+                    {manual && (
+                      <div className="text-xs text-zinc-500 mt-0.5 flex items-center gap-1">
+                        <Info size={10} className="text-sky-500 shrink-0" />
+                        {manual.reason}
+                      </div>
+                    )}
+                    {/* Auto reason summary */}
+                    {!manual && ngo.flagReasons.length > 0 && (
+                      <div className="text-xs text-zinc-400 mt-0.5 truncate max-w-md">
+                        {ngo.flagReasons[0]}{ngo.flagReasons.length > 1 ? ` +${ngo.flagReasons.length - 1} more` : ""}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Stats */}
+                  <div className="hidden md:flex items-center gap-6 shrink-0 text-right">
+                    <div>
+                      <div className="text-[10px] text-zinc-400 uppercase tracking-wider">Flagged</div>
+                      <div className="font-bold text-rose-600">{ngo.flagged} / {ngo.total}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-zinc-400 uppercase tracking-wider">At Risk</div>
+                      <div className="font-mono font-bold text-slate-900">{fmt(ngo.flaggedAmount)}</div>
+                    </div>
+                  </div>
+
+                  {/* Auditor remove button */}
+                  {isAuditor && manual && (
+                    <button
+                      onClick={e => { e.stopPropagation(); handleRemove(ngo.ngoName); }}
+                      className="shrink-0 p-2 text-zinc-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors border border-transparent hover:border-rose-200"
+                      title="Remove from suspected list"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+
+                  {/* Expand chevron */}
+                  <div className={`p-2 rounded-lg border shrink-0 transition-colors ${isOpen ? "border-rose-300 bg-rose-50 text-rose-600" : "border-zinc-200 text-zinc-400"}`}>
+                    {isOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                  </div>
+                </div>
+
+                {/* Expanded: flagged transactions */}
+                {isOpen && (
+                  <div className="border-t border-zinc-100 px-6 py-5">
+                    <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                      <AlertTriangle size={11} className="text-rose-500" />
+                      Flagged Transactions — {ngo.flagged} of {ngo.total} total
+                    </div>
+
+                    {ngo.txns.filter(t => t.flagged).length === 0 ? (
+                      <div className="text-sm text-zinc-400 italic">
+                        No flagged transactions on record — added manually by auditor.
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {ngo.txns.filter(t => t.flagged).map(tx => (
+                          <div
+                            key={tx.txId}
+                            className="flex flex-col gap-2 px-4 py-4 bg-rose-50/60 border border-rose-200 rounded-xl"
+                          >
+                            <div className="flex items-start justify-between gap-3 flex-wrap">
+                              <div>
+                                <div className="font-semibold text-sm text-slate-900">{tx.projectName}</div>
+                                <div className="flex items-center gap-3 mt-1 flex-wrap">
+                                  <span className="font-mono text-[10px] text-zinc-400">{tx.txId}</span>
+                                  <span className="text-[10px] text-zinc-400 flex items-center gap-1">
+                                    <Clock size={10} />{fmtDate(tx.timestamp)}
+                                  </span>
+                                  <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-[9px] font-bold uppercase tracking-wider rounded-full border border-indigo-100">
+                                    {tx.category}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <div className="font-mono font-bold text-slate-900">{fmt(tx.amount)}</div>
+                                <div className="text-[10px] font-bold text-rose-600">{tx.overspendRatio}x budget</div>
+                              </div>
+                            </div>
+                            {/* Flag reasons */}
+                            <div className="space-y-1">
+                              {tx.flagReasons.map((r, i) => (
+                                <div key={i} className="flex items-start gap-2 px-3 py-1.5 bg-white border border-rose-200 rounded-lg">
+                                  <AlertTriangle size={10} className="text-rose-500 shrink-0 mt-0.5" />
+                                  <span className="text-[11px] text-rose-800">{r}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Auditor note if manually added */}
+                    {manual && (
+                      <div className="mt-4 flex items-start gap-3 px-4 py-3 bg-sky-50 border border-sky-200 rounded-xl">
+                        <Lock size={13} className="text-sky-500 shrink-0 mt-0.5" />
+                        <div>
+                          <div className="text-[10px] font-bold text-sky-700 uppercase tracking-wider mb-0.5">Auditor Note</div>
+                          <div className="text-sm text-sky-800">{manual.reason}</div>
+                          <div className="text-[10px] text-sky-500 mt-1">
+                            Added by {manual.addedBy} · {new Date(manual.addedAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Footer */}
+      {!isAuditor && (
+        <div className="mt-6 flex items-center gap-3 px-5 py-3 bg-amber-50 border border-amber-200 rounded-xl">
+          <Lock size={14} className="text-amber-600 shrink-0" />
+          <p className="text-xs text-amber-800">
+            <span className="font-bold">Auditor access required</span> to manually add NGOs to this list. NGOs are auto-listed based on flagged transaction data.
+          </p>
+        </div>
+      )}
+
+      <div className="mt-5 flex items-center gap-6 text-zinc-400 text-[10px] font-bold uppercase tracking-widest">
+        <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-rose-500 inline-block animate-pulse" />Auto-detection active</span>
+        <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-sky-500 inline-block" />Auditor-curated entries</span>
+      </div>
+    </div>
+  );
+};
+
+/* ══════════════════════════════════════════════════════════
    MAIN PAGE
 ══════════════════════════════════════════════════════════ */
 const NgoFundSpend = () => {
   const [activeTab, setActiveTab] = useState("legit");
   const [ngoTransactions, setNgoTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [dataSource, setDataSource] = useState("api"); // "api" | "local"
+  const [dataSource, setDataSource] = useState("api");
   const { user } = useAuth();
   const isAuditor = user?.role === "auditor";
 
@@ -473,6 +869,15 @@ const NgoFundSpend = () => {
 
   const legitCount   = ngoTransactions.filter((t) => !t.flagged).length;
   const flaggedCount = ngoTransactions.filter((t) =>  t.flagged).length;
+  // Count unique NGOs with at least one flagged transaction
+  const suspectedCount = useMemo(() => {
+    const names = new Set(ngoTransactions.filter(t => t.flagged).map(t => t.ngoName));
+    try {
+      const manual = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      manual.forEach(e => names.add(e.ngoName));
+    } catch {}
+    return names.size;
+  }, [ngoTransactions]);
 
   if (loading) {
     return (
@@ -558,12 +963,31 @@ const NgoFundSpend = () => {
               {flaggedCount}
             </span>
           </button>
+
+          {/* SUSPECTED NGOs tab */}
+          <button
+            onClick={() => setActiveTab("suspected")}
+            className={`flex items-center gap-2.5 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 ${
+              activeTab === "suspected"
+                ? "bg-slate-900 text-white shadow-md shadow-slate-300"
+                : "text-zinc-500 hover:text-slate-800 hover:bg-slate-100"
+            }`}
+          >
+            <UserX size={16} />
+            Suspected NGOs
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+              activeTab === "suspected" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-700"
+            }`}>
+              {suspectedCount}
+            </span>
+          </button>
         </div>
 
         {/* ── Tab Content ── */}
         <div>
-          {activeTab === "legit"   && <LegitTab ngoTransactions={ngoTransactions} />}
-          {activeTab === "flagged" && <FlaggedTab ngoTransactions={ngoTransactions} />}
+          {activeTab === "legit"     && <LegitTab ngoTransactions={ngoTransactions} />}
+          {activeTab === "flagged"   && <FlaggedTab ngoTransactions={ngoTransactions} />}
+          {activeTab === "suspected" && <SuspectedTab ngoTransactions={ngoTransactions} isAuditor={isAuditor} />}
         </div>
 
       </div>

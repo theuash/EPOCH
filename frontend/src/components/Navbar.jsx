@@ -90,9 +90,8 @@ const Navbar = () => {
               <Link to="/auditor-home" className={`flex items-center gap-1.5 px-3 py-2 rounded-lg ${active('/auditor-home')}`}>
                 <LayoutDashboard size={13} /> Dashboard
               </Link>
-              <Link to="/auditor-ngo" className={`flex items-center gap-1.5 px-3 py-2 rounded-lg ${active('/auditor-ngo')}`}>
+              <Link to="/auditor-ngo" className={`flex items-center gap-1.5 px-3 py-2 rounded-lg ${active(['/auditor-ngo', '/auditor-public'])}`}>
                 <Layers size={13} /> NGO Spend
-                <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-600 text-[9px] font-bold rounded-full normal-case tracking-normal">Extended</span>
               </Link>
               <Link to="/auditor-public" className={`flex items-center gap-1.5 px-3 py-2 rounded-lg ${active('/auditor-public')}`}>
                 <Globe2 size={13} /> Public View
