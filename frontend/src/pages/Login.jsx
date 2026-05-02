@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   Wallet, Mail, Lock, ShieldCheck, ArrowRight,
-  AlertCircle, CheckCircle2, Shield, Info, KeyRound, Zap
+  AlertCircle, CheckCircle2, Shield, Info, KeyRound
 } from 'lucide-react';
 
 /* ── where each role lands after login ─────────────────── */
@@ -87,23 +87,6 @@ const WalletPanel = () => {
 
   return (
     <div className="space-y-5">
-      {/* Big wallet icon */}
-      <div className="flex flex-col items-center gap-3 py-2">
-        <div className="relative">
-          <div className="w-16 h-16 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl flex items-center justify-center shadow-2xl shadow-slate-300">
-            <Wallet size={28} className="text-white" />
-          </div>
-          <div className="absolute inset-0 rounded-2xl border-2 border-slate-400 animate-ping opacity-20" />
-          <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-amber-400 rounded-full flex items-center justify-center shadow-md">
-            <Zap size={11} className="text-white" fill="white" />
-          </div>
-        </div>
-        <div className="text-center">
-          <div className="font-bold text-slate-900 text-sm">MetaMask / Web3 Wallet</div>
-          <div className="text-xs text-zinc-400 mt-0.5">No password needed — wallet is your identity</div>
-        </div>
-      </div>
-
       {/* Role cards — side by side */}
       <div className="grid grid-cols-2 gap-3">
         {WALLET_ROLES.map(({ role, label, desc, icon: Icon, spinColor, card, iconBg, textColor, subColor, btnColor, badgeBg }) => (
@@ -300,14 +283,6 @@ const Login = () => {
 
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="relative inline-flex mb-5">
-            <div className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center shadow-2xl shadow-slate-200">
-              <ShieldCheck size={28} className="text-white" />
-            </div>
-            <div className="absolute -bottom-1.5 -right-1.5 w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center shadow-md">
-              <Lock size={11} className="text-white" />
-            </div>
-          </div>
           <h2 className="text-3xl font-bold text-slate-900 mb-2 tracking-tight">System Access</h2>
           <p className="text-zinc-400 text-sm">Admin &amp; Donor via wallet · All roles via email · Auditor email only</p>
         </div>

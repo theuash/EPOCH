@@ -2,7 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Globe, LogOut, ShieldAlert, LayoutDashboard, Globe2, Layers, Users, Eye, Receipt, Home } from 'lucide-react';
+import { Globe, LogOut, LayoutDashboard, Globe2, Layers, Users, Eye, Receipt, Home } from 'lucide-react';
 
 const Navbar = () => {
   const { t, i18n } = useTranslation();
@@ -48,13 +48,10 @@ const Navbar = () => {
     <nav className="bg-white sticky top-0 z-50 border-b border-zinc-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
 
-        {/* Brand */}
-        <Link to="/" className="flex items-center gap-2.5 no-underline group shrink-0">
-          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shadow ${isPublic ? 'bg-slate-800 shadow-slate-200' : logoMap[accentColor]}`}>
-            <ShieldAlert size={16} className="text-white" />
-          </div>
+        {/* Brand — text only, no icon */}
+        <Link to="/" className="flex items-center no-underline group shrink-0">
           <span className="text-lg font-bold tracking-tight text-slate-900">
-            Secure Node<span className={isPublic ? 'text-slate-500' : `text-${accentColor}-600`}>.</span>
+            Secure Node.
           </span>
         </Link>
 
@@ -73,7 +70,7 @@ const Navbar = () => {
                 <Layers size={13} /> NGO Spend
               </Link>
               <Link to="/login" className={`flex items-center gap-1.5 px-3 py-2 rounded-lg ${active('/login')}`}>
-                <ShieldAlert size={13} /> Login
+                Login
               </Link>
             </div>
           )}
@@ -91,11 +88,10 @@ const Navbar = () => {
           {isAuditor && (
             <div className="hidden md:flex items-center gap-1 text-xs font-bold text-zinc-500 uppercase tracking-widest mr-2">
               <Link to="/auditor-home" className={`flex items-center gap-1.5 px-3 py-2 rounded-lg ${active('/auditor-home')}`}>
-                <LayoutDashboard size={13} /> Home
+                <LayoutDashboard size={13} /> Dashboard
               </Link>
-              <Link to="/auditor-ngo" className={`flex items-center gap-1.5 px-3 py-2 rounded-lg ${active('/auditor-ngo')}`}>
+              <Link to="/auditor-ngo" className={`flex items-center gap-1.5 px-3 py-2 rounded-lg ${active(['/auditor-ngo', '/auditor-public'])}`}>
                 <Layers size={13} /> NGO Spend
-                <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-600 text-[9px] font-bold rounded-full normal-case tracking-normal">Extended</span>
               </Link>
               <Link to="/auditor-public" className={`flex items-center gap-1.5 px-3 py-2 rounded-lg ${active('/auditor-public')}`}>
                 <Globe2 size={13} /> Public View
@@ -140,7 +136,6 @@ const Navbar = () => {
                 <span className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${badgeMap[accentColor]}`}>
                   {isAuditor && <Eye size={11} />}
                   {isDonor   && <Receipt size={11} />}
-                  {isAdmin   && <ShieldAlert size={11} />}
                   {user.role}
                   {user.name && <span className="opacity-60 normal-case font-normal">· {user.name.split(' ')[0]}</span>}
                 </span>

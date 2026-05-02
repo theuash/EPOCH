@@ -81,7 +81,583 @@ body {
   border-color: #0055ff;
 }
 
-/* Parallax container utilities */
+/* ══════════════════════════════════════════════════════════
+   GLOBAL INTERACTION ANIMATIONS
+   Covers: buttons, links, nav items, table rows, cards,
+   tabs, inputs, badges, expand toggles — everything.
+══════════════════════════════════════════════════════════ */
+
+/* ── 1. Universal button press (scale down on click) ── */
+button:not(:disabled),
+[role="button"]:not(:disabled) {
+  transition:
+    transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.15s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    opacity 0.15s ease;
+}
+button:not(:disabled):active,
+[role="button"]:not(:disabled):active {
+  transform: scale(0.95) !important;
+}
+
+/* ── 2. Nav links — underline slide-in on hover ── */
+nav a {
+  position: relative;
+  transition: color 0.15s ease, transform 0.12s ease;
+}
+nav a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: currentColor;
+  border-radius: 2px;
+  transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+nav a:hover::after { width: 100%; }
+nav a:active { transform: scale(0.97); }
+
+/* ── 3. Clickable table rows ── */
+tr[class*="cursor-pointer"],
+tr[onClick],
+tbody tr {
+  transition: background-color 0.12s ease, transform 0.1s ease;
+}
+tr[class*="cursor-pointer"]:active {
+  transform: scaleX(0.995);
+}
+
+/* ── 4. Cards — lift + shadow on hover ── */
+.bg-white.border.rounded-2xl,
+.bg-white.border.rounded-xl {
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    border-color 0.15s ease;
+}
+.bg-white.border.rounded-2xl:hover,
+.bg-white.border.rounded-xl:hover {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+}
+
+/* ── 5. Ripple effect on buttons ── */
+@keyframes ripple {
+  0%   { transform: scale(0); opacity: 0.35; }
+  100% { transform: scale(4); opacity: 0; }
+}
+.ripple-btn {
+  position: relative;
+  overflow: hidden;
+}
+.ripple-btn::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0; left: 0;
+  background: rgba(255,255,255,0.3);
+  border-radius: inherit;
+  transform: scale(0);
+  opacity: 0;
+  pointer-events: none;
+}
+.ripple-btn:active::after {
+  animation: ripple 0.4s ease-out forwards;
+}
+
+/* ── 6. Tab buttons — smooth active indicator ── */
+@keyframes tabSlide {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+[class*="rounded-xl"][class*="font-bold"]:active {
+  transform: scale(0.96);
+}
+
+/* ── 7. Input focus — smooth border glow ── */
+input, textarea, select {
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
+}
+input:focus, textarea:focus {
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+/* ── 8. Expand/collapse rows — smooth height ── */
+@keyframes expandDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+tr + tr[class*="bg-rose"],
+tr + tr[class*="bg-emerald"],
+tr + tr[class*="bg-slate"] {
+  animation: expandDown 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── 9. Modal backdrop + card ── */
+@keyframes backdropIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes modalCardIn {
+  from { opacity: 0; transform: scale(0.93) translateY(12px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.fixed.inset-0[class*="bg-black"] {
+  animation: backdropIn 0.2s ease both;
+}
+.fixed.inset-0 > div[class*="bg-white"] {
+  animation: modalCardIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── 10. Badge / pill hover ── */
+span[class*="rounded-full"][class*="font-bold"] {
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+span[class*="rounded-full"][class*="font-bold"]:hover {
+  transform: scale(1.05);
+}
+
+/* ── 11. Stat cards stagger on page load ── */
+@keyframes statIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.grid > .bg-white.border {
+  animation: statIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.grid > .bg-white.border:nth-child(1) { animation-delay: 0.04s; }
+.grid > .bg-white.border:nth-child(2) { animation-delay: 0.08s; }
+.grid > .bg-white.border:nth-child(3) { animation-delay: 0.12s; }
+.grid > .bg-white.border:nth-child(4) { animation-delay: 0.16s; }
+.grid > .bg-white.border:nth-child(5) { animation-delay: 0.20s; }
+
+/* ── 12. Link hover in footer / sidebar ── */
+a {
+  transition: color 0.12s ease, opacity 0.12s ease;
+}
+a:active { opacity: 0.7; }
+
+/* ── 13. Checkbox / toggle ── */
+input[type="checkbox"] {
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+}
+input[type="checkbox"]:active {
+  transform: scale(0.85);
+}
+
+/* ── 14. Smooth page transitions ── */
+main > * {
+  animation: fadeSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── 15. Spinner pulse ── */
+@keyframes spinPulse {
+  0%   { transform: rotate(0deg) scale(1); }
+  50%  { transform: rotate(180deg) scale(1.05); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+.animate-spin {
+  animation: spinPulse 0.8s linear infinite !important;
+}
+
+/* ── 16. Success / error flash ── */
+@keyframes flashGreen {
+  0%   { background-color: transparent; }
+  30%  { background-color: rgba(16, 185, 129, 0.12); }
+  100% { background-color: transparent; }
+}
+@keyframes flashRed {
+  0%   { background-color: transparent; }
+  30%  { background-color: rgba(239, 68, 68, 0.10); }
+  100% { background-color: transparent; }
+}
+.flash-success { animation: flashGreen 0.6s ease both; }
+.flash-error   { animation: flashRed   0.6s ease both; }
+
+/* ── 17. Dropdown / select open ── */
+@keyframes dropIn {
+  from { opacity: 0; transform: translateY(-6px) scaleY(0.95); }
+  to   { opacity: 1; transform: translateY(0) scaleY(1); }
+}
+select:focus {
+  animation: dropIn 0.15s ease both;
+}
+
+/* ── 18. Notification / toast slide-in ── */
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(100%); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.toast {
+  animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── Disable animations for users who prefer reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   LAYER 2 — RICH MICRO-INTERACTIONS
+══════════════════════════════════════════════════════════ */
+
+/* ── Keyframes library ── */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes bounceIn {
+  0%   { opacity: 0; transform: scale(0.6); }
+  60%  { opacity: 1; transform: scale(1.08); }
+  80%  { transform: scale(0.96); }
+  100% { transform: scale(1); }
+}
+@keyframes slideRight {
+  from { opacity: 0; transform: translateX(-14px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideLeft {
+  from { opacity: 0; transform: translateX(14px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(99,102,241,0); }
+  50%       { box-shadow: 0 0 0 6px rgba(99,102,241,0.15); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes progressFill {
+  from { width: 0%; }
+  to   { width: var(--target-width, 100%); }
+}
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  20%       { transform: rotate(-4deg); }
+  40%       { transform: rotate(4deg); }
+  60%       { transform: rotate(-3deg); }
+  80%       { transform: rotate(3deg); }
+}
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  14%       { transform: scale(1.12); }
+  28%       { transform: scale(1); }
+  42%       { transform: scale(1.08); }
+  70%       { transform: scale(1); }
+}
+@keyframes floatUp {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-5px); }
+}
+@keyframes borderGlow {
+  0%, 100% { border-color: rgba(99,102,241,0.3); }
+  50%       { border-color: rgba(99,102,241,0.8); }
+}
+@keyframes checkmark {
+  0%   { stroke-dashoffset: 50; opacity: 0; }
+  50%  { opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 1; }
+}
+@keyframes numberPop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.25); color: #6366f1; }
+  100% { transform: scale(1); }
+}
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes rotateIn {
+  from { opacity: 0; transform: rotate(-8deg) scale(0.9); }
+  to   { opacity: 1; transform: rotate(0deg) scale(1); }
+}
+@keyframes typewriter {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+
+/* ── Page load — staggered content entrance ── */
+main > * {
+  animation: fadeSlideUp 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+main > *:nth-child(1) { animation-delay: 0.00s; }
+main > *:nth-child(2) { animation-delay: 0.06s; }
+main > *:nth-child(3) { animation-delay: 0.10s; }
+main > *:nth-child(4) { animation-delay: 0.14s; }
+
+/* ── Navbar entrance ── */
+nav {
+  animation: slideLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── Stat / info cards — staggered bounce-in ── */
+.grid > div,
+.grid > a {
+  animation: fadeSlideUp 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.grid > div:nth-child(1), .grid > a:nth-child(1) { animation-delay: 0.04s; }
+.grid > div:nth-child(2), .grid > a:nth-child(2) { animation-delay: 0.09s; }
+.grid > div:nth-child(3), .grid > a:nth-child(3) { animation-delay: 0.14s; }
+.grid > div:nth-child(4), .grid > a:nth-child(4) { animation-delay: 0.19s; }
+.grid > div:nth-child(5), .grid > a:nth-child(5) { animation-delay: 0.24s; }
+.grid > div:nth-child(6), .grid > a:nth-child(6) { animation-delay: 0.29s; }
+
+/* ── Numbers in stat cards pop when they appear ── */
+.text-2xl.font-bold,
+.text-3xl.font-bold,
+.text-4xl.font-bold {
+  animation: countUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.2s;
+}
+
+/* ── Buttons — rich press + hover ── */
+button:not(:disabled) {
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.18s ease,
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease,
+    filter 0.16s ease;
+  will-change: transform;
+}
+button:not(:disabled):hover {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+}
+button:not(:disabled):active {
+  transform: scale(0.94) translateY(1px) !important;
+  filter: brightness(0.96);
+  transition-duration: 0.06s !important;
+}
+
+/* Ripple wave on click */
+button:not(:disabled)::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.35) 0%, transparent 70%);
+  opacity: 0;
+  transform: scale(0);
+  border-radius: inherit;
+  pointer-events: none;
+  transition: none;
+}
+button:not(:disabled):active::before {
+  animation: ripple 0.45s ease-out forwards;
+}
+@keyframes ripple {
+  0%   { transform: scale(0); opacity: 0.5; }
+  100% { transform: scale(3.5); opacity: 0; }
+}
+
+/* ── Nav links — magnetic underline ── */
+nav a {
+  position: relative;
+  transition: color 0.15s ease, transform 0.12s ease;
+}
+nav a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px; left: 50%;
+  width: 0; height: 2px;
+  background: currentColor;
+  border-radius: 2px;
+  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1), left 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+nav a:hover::after { width: 100%; left: 0; }
+nav a:active { transform: scale(0.96); }
+
+/* ── Cards — lift + glow on hover ── */
+.bg-white.border.rounded-2xl,
+.bg-white.border.rounded-xl {
+  transition:
+    box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+    border-color 0.18s ease;
+  will-change: transform, box-shadow;
+}
+.bg-white.border.rounded-2xl:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.09), 0 2px 8px rgba(0,0,0,0.04);
+}
+.bg-white.border.rounded-xl:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+}
+
+/* ── Table rows — smooth highlight ── */
+tbody tr {
+  transition: background-color 0.12s ease, transform 0.1s ease;
+}
+tbody tr:hover { background-color: rgba(99,102,241,0.03); }
+tr[class*="cursor-pointer"]:active { transform: scaleX(0.998); }
+
+/* ── Expanded rows — slide down ── */
+tr + tr[class*="bg-rose"],
+tr + tr[class*="bg-emerald"],
+tr + tr[class*="bg-slate"],
+tr + tr[class*="bg-indigo"] {
+  animation: slideUpFade 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── Modal — dramatic entrance ── */
+.fixed.inset-0[class*="bg-black"],
+.fixed.inset-0[class*="backdrop"] {
+  animation: fadeIn 0.22s ease both;
+}
+.fixed.inset-0 > div[class*="bg-white"],
+.fixed.inset-0 > div[class*="rounded-2xl"] {
+  animation: bounceIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── Inputs — focus glow ring ── */
+input, textarea, select {
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    background-color 0.16s ease;
+}
+input:focus, textarea:focus {
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.14), 0 1px 4px rgba(0,0,0,0.06);
+}
+input:focus:not(:placeholder-shown),
+textarea:focus:not(:placeholder-shown) {
+  animation: borderGlow 2s ease infinite;
+}
+
+/* ── Badges / pills — pop on hover ── */
+span[class*="rounded-full"] {
+  transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s ease;
+}
+span[class*="rounded-full"]:hover {
+  transform: scale(1.08);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+/* ── Progress bars — animate fill on load ── */
+div[class*="bg-emerald-500"][class*="rounded-full"],
+div[class*="bg-rose-500"][class*="rounded-full"],
+div[class*="bg-amber-500"][class*="rounded-full"],
+div[class*="bg-indigo"][class*="rounded-full"] {
+  animation: progressFill 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.3s;
+}
+
+/* ── Skeleton shimmer ── */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+/* ── Checkbox bounce ── */
+input[type="checkbox"] {
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+}
+input[type="checkbox"]:checked {
+  animation: bounceIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+input[type="checkbox"]:active { transform: scale(0.82); }
+
+/* ── Alert / notice banners — slide in from left ── */
+div[class*="bg-amber-50"],
+div[class*="bg-indigo-50"],
+div[class*="bg-rose-50"],
+div[class*="bg-emerald-50"] {
+  animation: slideRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── Spinner — smooth pulse ── */
+.animate-spin {
+  animation: spin 0.75s linear infinite !important;
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Live pulse dot ── */
+.animate-pulse {
+  animation: heartbeat 1.8s ease-in-out infinite !important;
+}
+
+/* ── Floating icon animation ── */
+.animate-float {
+  animation: floatUp 3s ease-in-out infinite;
+}
+
+/* ── Success / error flash ── */
+@keyframes flashGreen {
+  0%   { background-color: transparent; }
+  25%  { background-color: rgba(16,185,129,0.14); }
+  100% { background-color: transparent; }
+}
+@keyframes flashRed {
+  0%   { background-color: transparent; }
+  25%  { background-color: rgba(239,68,68,0.12); }
+  100% { background-color: transparent; }
+}
+.flash-success { animation: flashGreen 0.7s ease both; }
+.flash-error   { animation: flashRed   0.7s ease both; }
+
+/* ── Notification / toast ── */
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(110%) scale(0.9); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+.toast { animation: toastIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* ── Icon wiggle on hover (for alert icons) ── */
+svg[class*="text-rose"]:hover,
+svg[class*="text-amber"]:hover {
+  animation: wiggle 0.4s ease both;
+}
+
+/* ── Divider lines — grow in ── */
+@keyframes growWidth {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+hr, .h-px {
+  transform-origin: left;
+  animation: growWidth 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.1s;
+}
+
+/* ── Reduced motion override ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
 .parallax-wrapper {
   perspective: 1px;
   height: 100vh;

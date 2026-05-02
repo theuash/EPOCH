@@ -12,9 +12,9 @@ const API = "/api/ngo-transactions";
 
 /* ── helpers ─────────────────────────────────────────────── */
 const fmt = n =>
-  n >= 1e7 ? "Rs." + (n/1e7).toFixed(2) + " Cr"
-  : n >= 1e5 ? "Rs." + (n/1e5).toFixed(1) + " L"
-  : "Rs." + Number(n).toLocaleString("en-IN");
+  n >= 1e7 ? "₹" + (n/1e7).toFixed(2) + " Cr"
+  : n >= 1e5 ? "₹" + (n/1e5).toFixed(1) + " L"
+  : "₹" + Number(n).toLocaleString("en-IN");
 
 const fmtDate = ts =>
   new Date(ts * 1000).toLocaleDateString("en-IN", { day:"2-digit", month:"short", year:"numeric" });
@@ -234,7 +234,7 @@ const MilestoneModal = ({ project, onClose, onSuccess }) => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Amount (Rs.) *</label>
+                  <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Amount (₹) *</label>
                   <div className="relative">
                     <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={14} />
                     <input type="number" min="1" className="w-full pl-9 pr-4 py-2.5 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition" placeholder="0" value={form.amount} onChange={e => set("amount", e.target.value)} required />
@@ -479,10 +479,10 @@ const DonationsTable = ({ txns, loading }) => {
                   <tr className={tx.flagged ? "bg-rose-50/30" : "bg-emerald-50/20"}>
                     <td colSpan={8} className="px-6 py-4 border-b border-zinc-100">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="bg-slate-900 text-white rounded-xl p-4 space-y-2">
+                        <div className="bg-slate-900 text-white rounded-xl p-4 space-y-2 overflow-hidden">
                           <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">On-Chain Record</div>
-                          {[["TX ID", tx.txId, "font-mono text-xs"],["Block Hash", tx.blockHash, "font-mono text-xs break-all"],["Overspend", tx.overspendRatio + "x", "font-bold"],["Payment TX ID", tx.paymentTxId || "—", "font-mono text-xs"],["Description", tx.description, ""]].map(([k,v,cls]) => (
-                            <div key={k}><span className="text-[10px] text-slate-400 block">{k}</span><span className={`text-slate-200 ${cls}`}>{v}</span></div>
+                          {[["TX ID", tx.txId, "font-mono text-xs"],["Block Hash", tx.blockHash, "font-mono text-xs break-all"],["Overspend", tx.overspendRatio + "x", "font-bold"],["Payment TX ID", tx.paymentTxId || "—", "font-mono text-xs break-all"],["Description", tx.description, ""]].map(([k,v,cls]) => (
+                            <div key={k} className="min-w-0"><span className="text-[10px] text-slate-400 block">{k}</span><span className={`text-slate-200 block ${cls}`}>{v}</span></div>
                           ))}
                         </div>
                         {tx.flagged && tx.flagReasons?.length > 0 && (

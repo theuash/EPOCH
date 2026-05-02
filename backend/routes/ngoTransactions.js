@@ -3,21 +3,45 @@ const router = express.Router();
 const NgoTransaction = require('../models/NgoTransaction');
 const crypto = require('crypto');
 
-/* ── fraud detection rules (mirrors smart contract logic) ── */
+/* ── fraud detection rules ─────────────────────────────── */
 function detectFraud(data) {
   const reasons = [];
-  const { amount, avgMonthlyBudget, vendorRepeatPct, milestoneApproved } = data;
+  const { amount, avgMonthlyBudget, vendorRepeatPct, milestoneApproved, description, paymentTxId } = data;
 
   const overspendRatio = avgMonthlyBudget > 0 ? amount / avgMonthlyBudget : 0;
 
+  // Rule 1: Overspend — amount > 3× average monthly budget
   if (overspendRatio >= 3) {
     reasons.push(`Spend ${overspendRatio.toFixed(1)}x avg monthly budget (threshold: 3x)`);
   }
+
+  // Rule 2: No milestone approval
   if (!milestoneApproved) {
     reasons.push('No milestone approval on record');
   }
+
+  // Rule 3: Vendor concentration — same vendor used in >80% of NGO transactions
   if (vendorRepeatPct > 80) {
     reasons.push(`Vendor repeat rate ${vendorRepeatPct}% (threshold: 80%)`);
+  }
+
+  // Rule 4: Round-number suspicious amount (exact multiples of 10000 above 50000)
+  if (amount >= 50000 && amount % 10000 === 0) {
+    reasons.push(`Suspicious round-number amount ₹${Number(amount).toLocaleString('en-IN')} — common in phantom transactions`);
+  }
+
+  // Rule 5: Vague description (too short or generic keywords)
+  const vagueKeywords = ['misc', 'miscellaneous', 'other', 'general', 'various', 'expenses', 'payment'];
+  const descLower = (description || '').toLowerCase().trim();
+  if (descLower.length < 15) {
+    reasons.push('Description too vague — insufficient detail for audit trail');
+  } else if (vagueKeywords.some(k => descLower === k || descLower.startsWith(k + ' '))) {
+    reasons.push(`Vague description "${description}" — does not describe specific deliverables`);
+  }
+
+  // Rule 6: Missing payment reference
+  if (!paymentTxId || paymentTxId.trim().length < 4) {
+    reasons.push('Missing or invalid payment transaction reference');
   }
 
   return { flagged: reasons.length > 0, flagReasons: reasons, overspendRatio };
@@ -34,11 +58,63 @@ router.get('/', async (req, res) => {
   }
 });
 
-/* ── GET /api/ngo-transactions/legit — non-flagged only (for NGO Spend page) ── */
+/* ── GET /api/ngo-transactions/legit ── */
 router.get('/legit', async (req, res) => {
   try {
     const transactions = await NgoTransaction.find({ flagged: false }).sort({ timestamp: -1 });
     res.json(transactions);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ── PATCH /api/ngo-transactions/:txId/audit — approve or reject milestone ── */
+router.patch('/:txId/audit', async (req, res) => {
+  try {
+    const { action, note, auditorName } = req.body; // action: 'approved' | 'rejected'
+    if (!['approved', 'rejected'].includes(action)) {
+      return res.status(400).json({ error: 'action must be "approved" or "rejected"' });
+    }
+    const doc = await NgoTransaction.findOneAndUpdate(
+      { txId: req.params.txId },
+      {
+        auditStatus: action,
+        auditNote: note || '',
+        auditedAt: new Date(),
+        auditedBy: auditorName || 'Auditor',
+      },
+      { new: true }
+    );
+    if (!doc) return res.status(404).json({ error: 'Transaction not found' });
+    res.json({ success: true, auditStatus: doc.auditStatus, auditNote: doc.auditNote });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ── POST /api/ngo-transactions/:txId/inquire — auditor raises a question to NGO ── */
+router.post('/:txId/inquire', async (req, res) => {
+  try {
+    const { question, askedBy } = req.body;
+    if (!question || question.trim().length < 5) {
+      return res.status(400).json({ error: 'Question must be at least 5 characters' });
+    }
+    const doc = await NgoTransaction.findOneAndUpdate(
+      { txId: req.params.txId },
+      {
+        $push: {
+          inquiries: {
+            question: question.trim(),
+            askedBy: askedBy || 'Auditor',
+            askedAt: new Date(),
+            status: 'open',
+          },
+        },
+      },
+      { new: true }
+    );
+    if (!doc) return res.status(404).json({ error: 'Transaction not found' });
+    res.json({ success: true, inquiries: doc.inquiries });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -83,6 +159,8 @@ router.post('/', async (req, res) => {
       avgMonthlyBudget: Number(avgMonthlyBudget),
       vendorRepeatPct: Number(vendorRepeatPct || 0),
       milestoneApproved: Boolean(milestoneApproved),
+      description: description || '',
+      paymentTxId: paymentTxId || '',
     });
 
     // 5. Build and save document
