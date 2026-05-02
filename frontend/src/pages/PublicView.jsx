@@ -1,12 +1,16 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import {
-  Globe2, CalendarDays, TrendingUp, AlertTriangle,
-  CheckCircle2, Activity, Clock, MapPin,
-  ShieldCheck, Zap, XCircle
+  Globe2, TrendingUp, AlertTriangle, CheckCircle2,
+  Activity, Clock, MapPin, ShieldCheck, Zap, XCircle,
+  Users, BarChart3, RefreshCw, Building2, ArrowUpRight,
+  ShieldAlert, Database
 } from 'lucide-react';
 import { MapContainer, TileLayer, CircleMarker, Polyline, Tooltip } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import allTxns from '../data/ngo_transactions.json';
+import axios from 'axios';
+import localTxns from '../data/ngo_transactions.json';
+
+const API_BASE = '/api';
 
 /* ─────────────────────────────────────────────────────────
    "This week" = Apr 27 – May 3 2026 (Unix seconds)
