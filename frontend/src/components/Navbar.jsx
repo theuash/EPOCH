@@ -90,11 +90,11 @@ const Navbar = () => {
               <Link to="/auditor-home" className={`flex items-center gap-1.5 px-3 py-2 rounded-lg ${active('/auditor-home')}`}>
                 <LayoutDashboard size={13} /> Dashboard
               </Link>
-              <Link to="/auditor-ngo" className={`flex items-center gap-1.5 px-3 py-2 rounded-lg ${active(['/auditor-ngo', '/auditor-public'])}`}>
-                <Layers size={13} /> NGO Spend
-              </Link>
               <Link to="/auditor-public" className={`flex items-center gap-1.5 px-3 py-2 rounded-lg ${active('/auditor-public')}`}>
                 <Globe2 size={13} /> Public View
+              </Link>
+              <Link to="/auditor-ngo" className={`flex items-center gap-1.5 px-3 py-2 rounded-lg ${active('/auditor-ngo')}`}>
+                <Layers size={13} /> NGO Spend
               </Link>
               <Link to="/donor-history" className={`flex items-center gap-1.5 px-3 py-2 rounded-lg ${active('/donor-history')}`}>
                 <Users size={13} /> Donor History

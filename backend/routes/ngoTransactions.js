@@ -6,7 +6,7 @@ const crypto = require('crypto');
 /* ── fraud detection rules ─────────────────────────────── */
 function detectFraud(data) {
   const reasons = [];
-  const { amount, avgMonthlyBudget, vendorRepeatPct, milestoneApproved, description, paymentTxId } = data;
+  const { amount, avgMonthlyBudget, vendorRepeatPct, milestoneApproved } = data;
 
   const overspendRatio = avgMonthlyBudget > 0 ? amount / avgMonthlyBudget : 0;
 
@@ -15,8 +15,13 @@ function detectFraud(data) {
     reasons.push(`Spend ${overspendRatio.toFixed(1)}x avg monthly budget (threshold: 3x)`);
   }
 
-  // Rule 2: No milestone approval
-  if (!milestoneApproved) {
+  // Rule 2: No milestone approval (only flag when combined with a risk signal)
+  const milestoneOk =
+    milestoneApproved === true ||
+    milestoneApproved === 'true' ||
+    milestoneApproved === 1;
+
+  if (!milestoneOk && (overspendRatio >= 1.5 || vendorRepeatPct > 50 || amount > 10000)) {
     reasons.push('No milestone approval on record');
   }
 
@@ -25,33 +30,38 @@ function detectFraud(data) {
     reasons.push(`Vendor repeat rate ${vendorRepeatPct}% (threshold: 80%)`);
   }
 
-  // Rule 4: Round-number suspicious amount (exact multiples of 10000 above 50000)
-  if (amount >= 50000 && amount % 10000 === 0) {
-    reasons.push(`Suspicious round-number amount ₹${Number(amount).toLocaleString('en-IN')} — common in phantom transactions`);
+  // Rule 4: Round-number suspicious amount (exact multiples of 10000 above 25000)
+  if (amount > 25000 && amount % 10000 === 0) {
+    reasons.push(`Suspicious round-number transfer of ₹${Number(amount).toLocaleString('en-IN')} (>₹25,000 and divisible by ₹10,000)`);
   }
 
-  // Rule 5: Vague description (too short or generic keywords)
-  const vagueKeywords = ['misc', 'miscellaneous', 'other', 'general', 'various', 'expenses', 'payment'];
-  const descLower = (description || '').toLowerCase().trim();
-  if (descLower.length < 15) {
-    reasons.push('Description too vague — insufficient detail for audit trail');
-  } else if (vagueKeywords.some(k => descLower === k || descLower.startsWith(k + ' '))) {
-    reasons.push(`Vague description "${description}" — does not describe specific deliverables`);
+  // Rule 5: Phantom project (high-value + no milestone)
+  if (overspendRatio >= 5 && !milestoneOk) {
+    reasons.push('Phantom project suspected — high-value spend with no milestone approval or on-ground proof');
   }
 
-  // Rule 6: Missing payment reference
-  if (!paymentTxId || paymentTxId.trim().length < 4) {
-    reasons.push('Missing or invalid payment transaction reference');
-  }
-
-  return { flagged: reasons.length > 0, flagReasons: reasons, overspendRatio };
+  return {
+    flagged: reasons.length > 0,
+    flagReasons: reasons,
+    overspendRatio: Math.round(overspendRatio * 100) / 100,
+  };
 }
 
 /* ── GET /api/ngo-transactions — all transactions ── */
 router.get('/', async (req, res) => {
   try {
     const transactions = await NgoTransaction.find().sort({ timestamp: -1 });
-    res.json(transactions);
+    // Ensure every document has the auditor fields — guards against docs
+    // seeded before those fields were added to the schema.
+    const safe = transactions.map(tx => {
+      const obj = tx.toObject();
+      if (!obj.auditStatus) obj.auditStatus = 'pending';
+      if (!obj.auditNote)   obj.auditNote   = '';
+      if (!obj.auditedBy)   obj.auditedBy   = '';
+      if (!Array.isArray(obj.inquiries)) obj.inquiries = [];
+      return obj;
+    });
+    res.json(safe);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error fetching NGO transactions' });
@@ -158,9 +168,7 @@ router.post('/', async (req, res) => {
       amount: Number(amount),
       avgMonthlyBudget: Number(avgMonthlyBudget),
       vendorRepeatPct: Number(vendorRepeatPct || 0),
-      milestoneApproved: Boolean(milestoneApproved),
-      description: description || '',
-      paymentTxId: paymentTxId || '',
+      milestoneApproved,
     });
 
     // 5. Build and save document

@@ -96,11 +96,11 @@ function App() {
                   <Route path="/admin"           element={<AdminRoute><AdminDashboard /></AdminRoute>} />
 
                   {/* ── Auditor-only pages ── */}
-                  <Route path="/auditor-home"   element={<AuditorRoute><AuditorDashboard /></AuditorRoute>} />
-                  <Route path="/auditor-public" element={<AuditorRoute><NgoFundSpend /></AuditorRoute>} />
-                  <Route path="/auditor-ngo"    element={<AuditorRoute><NgoFundSpend /></AuditorRoute>} />
-                  <Route path="/donor-history"  element={<AuditorRoute><DonorHistory /></AuditorRoute>} />
-                  <Route path="/auditor"        element={<AuditorRoute><AuditorDashboard /></AuditorRoute>} />
+                  <Route path="/auditor-home"        element={<AuditorRoute><AuditorDashboard /></AuditorRoute>} />
+                  <Route path="/auditor-public"      element={<AuditorRoute><PublicView /></AuditorRoute>} />
+                  <Route path="/auditor-ngo"         element={<AuditorRoute><NgoFundSpend /></AuditorRoute>} />
+                  <Route path="/donor-history"       element={<AuditorRoute><DonorHistory /></AuditorRoute>} />
+                  <Route path="/auditor"             element={<AuditorRoute><AuditorDashboard /></AuditorRoute>} />
 
                   {/* ── Donor-only pages ── */}
                   <Route path="/donor-home"      element={<DonorRoute><Landing /></DonorRoute>} />

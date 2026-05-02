@@ -4,7 +4,7 @@ import {
   CheckCircle2, Activity, Clock, MapPin,
   ShieldCheck, Zap, XCircle
 } from 'lucide-react';
-import { MapContainer, TileLayer, CircleMarker, Polyline, Tooltip, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, CircleMarker, Polyline, Tooltip } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import allTxns from '../data/ngo_transactions.json';
 
@@ -89,14 +89,7 @@ CITY_COORDS['Mysore'] = [12.2958, 76.6394];
 // Collect all unique cities used in flows
 const FLOW_CITIES = [...new Set(FLOWS.flatMap(f => [f.from, f.to]))];
 
-/* Fixes Leaflet's default icon path issue with bundlers */
-function FixLeafletIcons() {
-  const map = useMap();
-  useEffect(() => {
-    // nothing needed — we use CircleMarker which has no icon
-  }, [map]);
-  return null;
-}
+/* Leaflet default icon fix not needed — we use CircleMarker only */
 
 const MapSection = () => {
   const [activeFlow, setActiveFlow] = useState(null);
@@ -127,7 +120,6 @@ const MapSection = () => {
             scrollWheelZoom={false}
             zoomControl={true}
           >
-            <FixLeafletIcons />
 
             {/* OpenStreetMap tiles — completely free, no API key */}
             <TileLayer
