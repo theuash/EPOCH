@@ -9,7 +9,7 @@ import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import localTxns from "../data/ngo_transactions.json";
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE = '/api';
 
 /* ─── helpers ─── */
 const getSeverity = (ratio) => {
@@ -56,6 +56,9 @@ const LegitTab = ({ ngoTransactions }) => {
     if (catFilter !== "All") txns = txns.filter((tx) => tx.category === catFilter);
     return txns;
   }, [ngoTransactions, search, catFilter]);
+
+  const categories = ["All", ...new Set(ngoTransactions.filter((t) => !t.flagged).map((t) => t.category))];
+  const totalAmount = legitTxns.reduce((s, t) => s + t.amount, 0);
 
   return (
     <div>
