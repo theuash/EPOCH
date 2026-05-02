@@ -68,9 +68,6 @@ const LegitTab = ({ ngoTransactions }) => {
     return txns;
   }, [ngoTransactions, search, catFilter]);
 
-  const categories = ["All", ...new Set(ngoTransactions.filter((t) => !t.flagged).map((t) => t.category))];
-  const totalAmount = legitTxns.reduce((s, t) => s + t.amount, 0);
-
   return (
     <div>
       {/* Stats */}
