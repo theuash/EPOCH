@@ -1,4 +1,4 @@
-import "@nomicfoundation/hardhat-toolbox";
+import "@nomicfoundation/hardhat-ethers";
 import "dotenv/config";
 
 /** @type import('hardhat/config').HardhatUserConfig */

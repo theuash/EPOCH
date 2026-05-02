@@ -41,6 +41,16 @@ const LegitTab = ({ ngoTransactions }) => {
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("All");
 
+  const categories = useMemo(
+    () => ["All", ...new Set(ngoTransactions.filter((t) => !t.flagged).map((t) => t.category))],
+    [ngoTransactions]
+  );
+
+  const totalAmount = useMemo(
+    () => ngoTransactions.filter((t) => !t.flagged).reduce((s, tx) => s + tx.amount, 0),
+    [ngoTransactions]
+  );
+
   const legitTxns = useMemo(() => {
     let txns = ngoTransactions.filter((tx) => !tx.flagged);
     if (search.trim()) {
